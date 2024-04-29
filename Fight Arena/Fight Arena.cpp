@@ -308,13 +308,13 @@ void Battle(Character& player, std::vector<Character>& enemyList, std::vector<At
 
     int chooseRandomEnemy{ randomEnemy(mt) };
 
+    std::cout << "A " << enemyList[chooseRandomEnemy].GetName() << " has appeared!\n";
+    std::cout << "It has " << enemyList[chooseRandomEnemy].GetHealth() << " HP\n\n";
+
     while (IsBattleOver != true)
     {
         if (!enemyList.empty())
         {
-            //This could probably be moved outside of the while loop since were going to have one fight per round.
-            std::cout << "A " << enemyList[chooseRandomEnemy].GetName() << " has appeared!\n\n";
-
             std::cout << "Do what?\n\n";
 
             std::cout << "1)Attack\n";
@@ -326,12 +326,28 @@ void Battle(Character& player, std::vector<Character>& enemyList, std::vector<At
             switch (choice)
             {
             case 1:
+            {
                 std::cout << "Use What Move?\n\n";
 
-                for (const auto& i : attackList)
+                for (int counter{ 1 }; const auto & i : attackList)
                 {
-                    std::cout << i.GetName() << " -Dmg: " << i.CalculateDamage(player.GetLevel()) << '\n';
+                    std::cout << counter++ << ") " << i.GetName() << " -Dmg: " << i.CalculateDamage(player.GetLevel()) << '\n';
                 }
+
+                int choice{ 0 };
+
+                std::cin >> choice;
+
+                std::cout << player.GetName() << " used " << attackList[choice -1].GetName() << "!\n";
+                std::cout << "The " << enemyList[chooseRandomEnemy].GetName() << " has " << enemyList[chooseRandomEnemy].GetHealth() << " HP left!\n";
+
+                enemyList[chooseRandomEnemy].RemoveHealth(attackList[choice - 1].CalculateDamage(player.GetLevel()));
+
+                if (enemyList[chooseRandomEnemy].IsDead())
+                {
+                    std::cout << player.GetName() << " defeated the " << enemyList[chooseRandomEnemy].GetName() << "!\n";
+                }
+            }
                 break;
 
             case 2:
