@@ -40,7 +40,7 @@ public:
 
     double CalculateDamage(int characterLevel) const
     {
-        return mDamage + mUpgradeLevel * (characterLevel / mDamageBase);
+        return mDamage + mUpgradeLevel * (characterLevel * mDamageBase);
     }
 
     void IncreaseUpgradeLevel()
@@ -218,9 +218,10 @@ void DisplayInfo(const Character& character)
     {
         for (const auto& i : character.GetAttacks())
         {
-            std::cout << "        -Name:     " << i.GetName() << '\n';
-            std::cout << "        -Dmg:      " << std::setprecision(3) << i.CalculateDamage(character.GetLevel()) << "\n";
-            std::cout << "        -Lvl:      " << i.GetUpgradeLevel() << "/" << i.GetMaxUpgradeLevel() << "\n\n";
+            std::cout << "        -Name:      " << i.GetName() << '\n';
+            std::cout << "        -Base Dmg:  " << std::setprecision(3) << i.GetDamageBase() << '\n';
+            std::cout << "        -Total Dmg: " << std::setprecision(3) << i.CalculateDamage(character.GetLevel()) << "\n";
+            std::cout << "        -Lvl:       " << i.GetUpgradeLevel() << "/" << i.GetMaxUpgradeLevel() << "\n\n";
         }
     }
 }
@@ -285,11 +286,10 @@ void ChangePlayerName(Character& character)
 std::mt19937 mt{ static_cast<unsigned int>(std::chrono::steady_clock::now().time_since_epoch().count()) };
 
 
-//Needs  finishing
-//
-//Need to finish writing code for  battling creatures
-void Battle(Character& player, std::vector<Character>& enemyList, std::vector<Attack>& attackList)
+//Rebuild this entire function, rename it to Arena and put battle code in function  named Battle
+void Arena(Character& player, std::vector<Character>& enemyList, std::vector<Attack>& attackList)
 {
+    //Put this in its own function and call it.
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     std::uniform_int_distribution<int> randomEnemy{};
