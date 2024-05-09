@@ -260,15 +260,15 @@ void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
 
     switch (choice)
     {
-    case 1:
-        PurchaseUpgrades(character, attackList);
-        break;
+        case 1:
+            PurchaseUpgrades(character, attackList);
+            break;
 
-    case 2:
-        return;
+        case 2:
+            return;
 
-    default:
-        std::cout << "Incorrect choice\n";
+        default:
+            std::cout << "Incorrect choice\n";
     }
 }
 
@@ -287,42 +287,51 @@ void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList)
 
     std::cin >> choice;
 
-    int upgradeStep{ 500 * attackList[choice - 1].GetLevel() };
+    int upgradeStep{ 0 };
+    auto attackToUpgrade{ 0 };
 
-    auto attackToUpgrade{ attackList[choice - 1].GetLevel() };
-
-    if (character.GetMoney() > upgradeStep)
+    if (choice <= attackList.size())
     {
-        std::cout << attackList[choice - 1].GetName() << " will cost " << upgradeStep << " to upgrade to level " << attackList[choice - 1].GetLevel() + 1 << ".\n";
-        std::cout << "You currently have $" << character.GetMoney() << " continue with upgrade?\n";
+        upgradeStep = 500 * attackList[choice - 1].GetLevel();
+        attackToUpgrade = attackList[choice - 1].GetLevel();
 
-        int choice{ 0 };
-
-        std::cout << "1) Yes\n";
-        std::cout << "2) No\n";
-
-        std::cin >> choice;
-
-        if (choice == 1)
+        if (character.GetMoney() > upgradeStep)
         {
-            attackList[choice - 1].IncreaseLevel();
-            character.TakeMoney(upgradeStep);
+            std::cout << attackList[choice - 1].GetName() << " will cost " << upgradeStep << " to upgrade to level " << attackList[choice - 1].GetLevel() + 1 << ".\n";
+            std::cout << "You currently have $" << character.GetMoney() << " continue with upgrade?\n";
 
-            std::cout << "You currently have $" << character.GetMoney() << " and your " << attackList[choice - 1].GetName()
-                << " attack is at level " << attackList[choice - 1].GetLevel() << "!\n";
-        }
-        if (choice == 2)
-        {
-            std::cout << "Come back anytime\n\n";
-            return;
+            int choice{ 0 };
+
+            std::cout << "1) Yes\n";
+            std::cout << "2) No\n";
+
+            std::cin >> choice;
+
+            if (choice == 1)
+            {
+                attackList[choice - 1].IncreaseLevel();
+                character.TakeMoney(upgradeStep);
+
+                std::cout << "You currently have $" << character.GetMoney() << " and your " << attackList[choice - 1].GetName()
+                    << " attack is at level " << attackList[choice - 1].GetLevel() << "!\n";
+            }
+            else if (choice == 2)
+            {
+                std::cout << "Come back anytime\n\n";
+                return;
+            }
+            else
+            {
+                std::cout << "Huh?\n";
+            }
         }
         else
         {
-            std::cout << "Huh?\n";
+            std::cout << "It seems you do not posses enough funds to perform any upgrades.\n";
         }
     }
     else
     {
-        std::cout << "It seems you do not posses enough funds to perform any upgrades.\n";
+        std::cout << "It doesnt seem like that was a valid choice, please choose again.\n\n";
     }
 }
