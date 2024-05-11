@@ -75,131 +75,195 @@ private:
 
 class Character
 {
-public:
-    Character(const std::string& name, int health, int level, int money)
-        : mName(name), mHealth(health), mLevel(level), mMoney(money)
-    {}
+    public:
+        Character(const std::string& name, int health, int level, int money)
+            : mName(name), mHealth(health), mLevel(level), mMoney(money)
+        {}
 
-    std::string GetName() const
-    {
-        return mName;
-    }
-
-    int GetHealth() const
-    {
-        return mHealth;
-    }
-
-    int GetLevel() const
-    {
-        return mLevel;
-    }
-
-    int GetMoney() const
-    {
-        return mMoney;
-    }
-
-    int GetMaxLevel() const
-    {
-        return mMaxLevel;
-    }
-
-    int GetExperience() const
-    {
-        return mExperience;
-    }
-
-    bool IsMaxLevel() const
-    {
-        if (mLevel == mMaxLevel)
+        //Done
+        std::string GetName() const
         {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    void GiveExperience(int amount)
-    {
-        mExperience += amount;
-
-        // Cap the experience to a maximum value
-        if (mExperience > mMaxExperience)
-        {
-            mExperience = mMaxExperience;
+            return mName;
         }
 
-        // Level up as much as possible
-        while (mExperience >= mExperienceMultiplier && mLevel < mMaxLevel)
+        //Done
+        int GetHealth() const
         {
-            ++mLevel;
-            mExperience -= mExperienceMultiplier;
+            return mHealth;
         }
 
-        // Cap the level to a maximum value
-        if (mLevel > mMaxLevel)
+        //Done
+        int GetLevel() const
         {
-            mLevel = mMaxLevel;
+            return mLevel;
         }
-    }
 
-    void GiveMoney(int amount)
-    {
-        if (amount > 0)
+        //Done
+        int GetMoney() const
         {
-            mMoney += amount;
+            return mMoney;
         }
-    }
 
-    void TakeMoney(int amount)
-    {
-        if (amount > 0 && mMoney >= amount)
+        //Done
+        int GetMaxLevel() const
         {
-            mMoney -= amount;
+            return mMaxLevel;
         }
-    }
 
-    void SetMoney(int amount)
-    {
-        if (amount > 0)
+        //Done
+        int GetExperience() const
         {
-            mMoney = amount;
+            return mExperience;
         }
-    }
 
-    int CalculateExperience() const
-    {
-        return 500 * mLevel;
-    }
+        //Done
+        bool IsMaxLevel() const
+        {
+            if (mLevel == mMaxLevel)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
-    int GetMaxExperience() const
-    {
-        return mMaxExperience;
-    }
+        //Done
+        void GiveExperience(int amount)
+        {
+            mExperience += amount;
 
-private:
-    std::string mName{ "" };
-    int mHealth{ 0 };
-    int mLevel{ 1 };
-    int mMoney{ 0 };
-    int mExperience{ 0 };
+            // Cap the experience to a maximum value
+            if (mExperience > mMaxExperience)
+            {
+                mExperience = mMaxExperience;
+            }
 
-    static const int mMaxLevel{ 100 };
-    static const int mExperienceMultiplier{ 500 };
-    static const int mMaxExperience{ mExperienceMultiplier * mMaxLevel };
+            // Level up as much as possible
+            while (mExperience >= mExperienceMultiplier && mLevel < mMaxLevel)
+            {
+                ++mLevel;
+                mExperience -= mExperienceMultiplier;
+            }
+
+            // Cap the level to a maximum value
+            if (mLevel > mMaxLevel)
+            {
+                mLevel = mMaxLevel;
+            }
+        }
+
+        //Done
+        void GiveMoney(int amount)
+        {
+            if (amount > 0)
+            {
+                mMoney += amount;
+
+                if (mMoney >= mMaxMoney)
+                {
+                    mMoney = mMaxMoney;
+                }
+            }
+        }
+
+        void TakeMoney(int amount)
+        {
+            if (amount > 0 && mMoney >= amount)
+            {
+                mMoney -= amount;
+            }
+        }
+
+        
+        void SetMoney(int amount)
+        {
+            if (amount > 0 && amount <= mMaxMoney)
+            {
+                mMoney = amount;
+            }
+        }
+
+        //Done
+        int CalculateExperience() const
+        {
+            return 500 * mLevel;
+        }
+
+        //Done
+        int GetMaxExperience() const
+        {
+            return mMaxExperience;
+        }
+
+        bool IsAlive() const
+        {
+            if (mHealth > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        //Done
+        void AddHealth(int amount)
+        {
+            if (amount > 0)
+            {
+                mHealth += amount;
+
+                if (mHealth >= mMaxHealth)
+                {
+                    mHealth = mMaxHealth;
+                }
+            } 
+        }
+
+        //Done
+        void SubtractHealth(int amount)
+        {
+            if (amount > 0)
+            {
+                mHealth -= amount;
+
+                if (mHealth < 0)
+                {
+                    mHealth = 0;
+                }
+            }
+        }
+
+    private:
+        std::string mName{ "" };
+        int mHealth{ 0 };
+        int mLevel{ 1 };
+        int mMoney{ 0 };
+        int mExperience{ 0 };
+
+        static const int mMaxLevel{ 100 };
+        static const int mMaxHealth{ 100 };
+        static const int mExperienceMultiplier{ 500 };
+        static const int mMaxExperience{ mExperienceMultiplier * mMaxLevel };
+        static const int mMaxMoney{ 99999999 };
 };
 
 void GetCharacterInfo(const Character& character, const std::vector<Attack>& attackList);
 void Test(Character& character, std::vector<Attack>& attackList);
 void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList);
 void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList);
+void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
 
 int main()
 {
-    Character player("Hero", 100, 1, 25);
+    Character player("Hero", 3, 1, 25);
+
+    Character goblin("Goblin", 30, 1, 0);
+    Character orc("Orc", 42, 1, 0);
+    Character giant("Giant", 103, 1, 0);
 
     Attack slash("Slash", 3, 1);
     Attack scratch("Scratch", 3, 1);
@@ -207,27 +271,78 @@ int main()
     Attack stomp("Stomp", 3, 1);
 
     std::vector<Attack> attackList{ slash, scratch, fireBlast, stomp };
+    std::vector<Character> enemyList{ goblin, orc, giant };
 
-    std::cout << "Players current Level: " << player.GetLevel() << "\n\n";
+    bool isTesting{ true };
 
-    //Test(player, attackList);
-
-    //GetCharacterInfo(player, attackList);
-    player.GiveMoney(30000);
-
-    bool isGameEnded{ false };
-
-    while (!isGameEnded)
+    if (isTesting == true)
     {
-        PurchaseUpgradesMenu(player, attackList);
+        Test(player, attackList);
+    }
+    else
+    {
+        bool isGameEnded{ false };
+
+        while (!isGameEnded)
+        {
+            std::cout << "What would you like to do?\n\n";
+
+            std::cout << "1) Purchase Upgrades\n";
+            std::cout << "2) View Character Info\n";
+            std::cout << "3) Fight in Arena\n";
+            std::cout << "4) Exit\n\n";
+
+            int choice{ 0 };
+
+            std::cin >> choice;
+
+            switch (choice)
+            {
+                case 1:
+                    PurchaseUpgradesMenu(player, attackList);
+                    break;
+
+                case 2:
+                    GetCharacterInfo(player, attackList);
+                    break;
+
+                case 3:
+                    Arena(player, attackList, enemyList);
+                    break;
+
+                case 4:
+                    isGameEnded = true;
+                    break;
+
+                default:
+                    std::cout << "Incorrect selection\n\n";
+            }
+        }
     }
 }
 
 void Test(Character& character, std::vector<Attack>& attackList)
 {
-    character.GiveMoney(30);
+    std::cout << "Health: " << character.GetHealth() << std::boolalpha <<" - Is Alive?: " << character.IsAlive() << '\n';
 
-    std::cout << "Money: " << character.GetMoney() << '\n';
+    character.SubtractHealth(2);
+    character.SubtractHealth(1);
+
+    std::cout << "Health: " << character.GetHealth() << std::boolalpha << " - Is Alive?: " << character.IsAlive() << '\n';
+}
+
+void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
+{
+
+    if (enemyList.size() > 0)
+    {
+        std::uniform_int_distribution<int> randomizedEnemy{ 0, static_cast<int>(enemyList.size() - 1) };
+    }
+
+    std::uniform_int_distribution<int> randomizedRewardMoneyLow{ 3, 13 };
+    std::uniform_int_distribution<int> randomizedRewardMoneyMedium{ 14, 37 };
+    std::uniform_int_distribution<int> randomizedRewardMoneyHigh{ 38, 219 };
+    std::uniform_int_distribution<int> randomizedRewardMoneyBoss{ 1000, 3000 };
 }
 
 void GetCharacterInfo(const Character& character, const std::vector<Attack>& attackList)
@@ -249,7 +364,8 @@ void GetCharacterInfo(const Character& character, const std::vector<Attack>& att
 
 void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
 {
-    std::cout << "What would you like to purchase upgrades for?\n\n";
+    std::cout << "What would you like to purchase upgrades for?\n";
+    std::cout << "Cash $" << character.GetMoney() << "\n\n";
 
     std::cout << "1) Attacks\n";
     std::cout << "2) Return\n";
