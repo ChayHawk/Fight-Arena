@@ -5,6 +5,7 @@
 #include <random>
 #include <format>
 #include <cassert>
+#include <limits>
 
 std::mt19937 mt{ static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) };
 
@@ -155,7 +156,7 @@ class Character
         }
 
         //Done
-        void GiveMoney(int amount)
+        void AddMoney(int amount)
         {
             if (amount > 0)
             {
@@ -168,7 +169,7 @@ class Character
             }
         }
 
-        void TakeMoney(int amount)
+        void SubtractMoney(int amount)
         {
             if (amount > 0 && mMoney >= amount)
             {
@@ -259,11 +260,14 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
 
 int main()
 {
-    Character player("Hero", 3, 1, 25);
+    Character player("Hero", 3, 1, 145);
 
     Character goblin("Goblin", 30, 1, 0);
     Character orc("Orc", 42, 1, 0);
     Character giant("Giant", 103, 1, 0);
+    Character werewolf("Werewolf", 92, 1, 0);
+
+    std::vector<Character> enemyList{ goblin, orc, giant, werewolf };
 
     Attack slash("Slash", 3, 1);
     Attack scratch("Scratch", 3, 1);
@@ -271,9 +275,9 @@ int main()
     Attack stomp("Stomp", 3, 1);
 
     std::vector<Attack> attackList{ slash, scratch, fireBlast, stomp };
-    std::vector<Character> enemyList{ goblin, orc, giant };
 
-    bool isTesting{ true };
+
+    bool isTesting{ false };
 
     if (isTesting == true)
     {
@@ -333,16 +337,81 @@ void Test(Character& character, std::vector<Attack>& attackList)
 
 void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
 {
+    int enemyIndex{ static_cast<int>(enemyList.size() - 1) };
 
-    if (enemyList.size() > 0)
-    {
-        std::uniform_int_distribution<int> randomizedEnemy{ 0, static_cast<int>(enemyList.size() - 1) };
-    }
+    std::uniform_int_distribution<int> randomizedEnemy{0, enemyIndex};
+
+    int randomlyChosenEnemy{ randomizedEnemy(mt) };
 
     std::uniform_int_distribution<int> randomizedRewardMoneyLow{ 3, 13 };
     std::uniform_int_distribution<int> randomizedRewardMoneyMedium{ 14, 37 };
     std::uniform_int_distribution<int> randomizedRewardMoneyHigh{ 38, 219 };
     std::uniform_int_distribution<int> randomizedRewardMoneyBoss{ 1000, 3000 };
+
+
+    bool hasMatchEnded{ false };
+
+    std::cout << "Welcome to the arena! this is your opponent:\n";
+    std::cout << enemyList[randomlyChosenEnemy].GetName() << " - " << enemyList[randomlyChosenEnemy].GetHealth() << "\n\n";
+
+
+    while(hasMatchEnded == false)
+    {
+        std::cout << "What would you like to do?\n\n";
+
+        std::cout << "1) Use Attack\n";
+        std::cout << "2) Forfeit\n";
+
+        int choice{ 0 };
+
+        std::cin >> choice;
+
+        switch (choice)
+        {
+            case 1:
+            {
+
+            }
+            break;
+
+            case 2:
+            {
+                std::cout << "Are you sure? It will cost $100 to forfeit the match, and you have $" << character.GetMoney() << '\n';
+                std::cout << "1) Yes\n";
+                std::cout << "2) No\n";
+
+                int choice{ 0 };
+
+                std::cin >> choice;
+
+                if (choice == 1)
+                {
+                    std::cout << "You forfeited the match, you lost $";
+
+                    if (character.GetMoney() > 100)
+                    {
+                        character.SubtractMoney(100);
+                        std::cout << "100\n\n";
+                    }
+                    else
+                    {
+                        std::cout << character.GetMoney() << "\n\n";
+                        character.SubtractMoney(character.GetMoney());
+                    }
+
+                    hasMatchEnded = true;
+                }
+                else if (choice == 2)
+                {
+                    break;
+                }
+            }
+            break;
+
+            default:
+                std::cout << "Incorrect choice\n\n";
+        }
+    }
 }
 
 void GetCharacterInfo(const Character& character, const std::vector<Attack>& attackList)
@@ -358,7 +427,6 @@ void GetCharacterInfo(const Character& character, const std::vector<Attack>& att
         std::cout << std::format("{:>4}", "") << attack.GetName() << '\n';
         std::cout << std::format("{:>8}", "") << "-Base Power: " << attack.GetBasePower() << '\n';
         std::cout << std::format("{:>8}", "") << "-Attack Power: " << attack.GetDamage(character.GetLevel()) << "\n\n";
-
     }
 }
 
@@ -426,7 +494,7 @@ void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList)
             if (choice == 1)
             {
                 attackList[choice - 1].IncreaseLevel();
-                character.TakeMoney(upgradeStep);
+                character.SubtractMoney(upgradeStep);
 
                 std::cout << "You currently have $" << character.GetMoney() << " and your " << attackList[choice - 1].GetName()
                     << " attack is at level " << attackList[choice - 1].GetLevel() << "!\n";
