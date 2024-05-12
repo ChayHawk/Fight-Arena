@@ -39,7 +39,7 @@ public:
 
     int GetDamage(int characterLevel) const
     {
-        return (mBasePower / 2 * ((mLevel * characterLevel) / 2));
+        return (mLevel * characterLevel) * mBasePower;
     }
 
     void IncreaseLevel()
@@ -269,10 +269,10 @@ int main()
 
     std::vector<Character> enemyList{ goblin, orc, giant, werewolf };
 
-    Attack slash("Slash", 3, 1);
-    Attack scratch("Scratch", 3, 1);
-    Attack fireBlast("Fire Blast", 3, 1);
-    Attack stomp("Stomp", 3, 1);
+    Attack slash("Slash", 4, 1);
+    Attack scratch("Scratch", 1, 1);
+    Attack fireBlast("Fire Blast", 12, 1);
+    Attack stomp("Stomp", 7, 1);
 
     std::vector<Attack> attackList{ slash, scratch, fireBlast, stomp };
 
@@ -335,18 +335,28 @@ void Test(Character& character, std::vector<Attack>& attackList)
     std::cout << "Health: " << character.GetHealth() << std::boolalpha << " - Is Alive?: " << character.IsAlive() << '\n';
 }
 
+bool ForfeitMatch(Character& character);
+void UseAttack(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
+
 void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
 {
     int enemyIndex{ static_cast<int>(enemyList.size() - 1) };
 
-    std::uniform_int_distribution<int> randomizedEnemy{0, enemyIndex};
+    std::uniform_int_distribution<int> randomizedEnemy{ 0, enemyIndex };
 
     int randomlyChosenEnemy{ randomizedEnemy(mt) };
 
-    std::uniform_int_distribution<int> randomizedRewardMoneyLow{ 3, 13 };
-    std::uniform_int_distribution<int> randomizedRewardMoneyMedium{ 14, 37 };
-    std::uniform_int_distribution<int> randomizedRewardMoneyHigh{ 38, 219 };
-    std::uniform_int_distribution<int> randomizedRewardMoneyBoss{ 1000, 3000 };
+
+    int attackIndex{ static_cast<int>(attackList.size() - 1) };
+
+    std::uniform_int_distribution<int> randomizedAttack{ 0, attackIndex };
+
+    int randomlyChosenAttack{ randomizedAttack( mt) };
+
+
+    std::uniform_int_distribution<int> randomizedRewardMoney{ 9, 43 };
+
+    std::uniform_int_distribution<int> missAttackChance{0, 10};
 
 
     bool hasMatchEnded{ false };
@@ -369,48 +379,65 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
         switch (choice)
         {
             case 1:
-            {
-
-            }
-            break;
+                UseAttack(character, attackList, enemyList);
+                break;
 
             case 2:
-            {
-                std::cout << "Are you sure? It will cost $100 to forfeit the match, and you have $" << character.GetMoney() << '\n';
-                std::cout << "1) Yes\n";
-                std::cout << "2) No\n";
-
-                int choice{ 0 };
-
-                std::cin >> choice;
-
-                if (choice == 1)
-                {
-                    std::cout << "You forfeited the match, you lost $";
-
-                    if (character.GetMoney() > 100)
-                    {
-                        character.SubtractMoney(100);
-                        std::cout << "100\n\n";
-                    }
-                    else
-                    {
-                        std::cout << character.GetMoney() << "\n\n";
-                        character.SubtractMoney(character.GetMoney());
-                    }
-
-                    hasMatchEnded = true;
-                }
-                else if (choice == 2)
-                {
-                    break;
-                }
-            }
-            break;
+                hasMatchEnded = ForfeitMatch(character);
+                break;
 
             default:
                 std::cout << "Incorrect choice\n\n";
         }
+    }
+}
+
+void UseAttack(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
+{
+    std::cout << "Which one?\n\n";
+
+    for (int counter{ 1 }; const auto & attack : attackList)
+    {
+        std::cout << counter++ << "). " << attack.GetName() << '\n';
+        std::cout << std::format("{:>5}", "") << " -PWR: " << attack.GetDamage(character.GetLevel()) << '\n';
+        std::cout << std::format("{:>5}", "") << " -LVL: " << attack.GetLevel() << '\n';
+    }
+
+    int choice{ 0 };
+
+    std::cin >> choice;
+}
+
+bool ForfeitMatch(Character& character)
+{
+    std::cout << "Are you sure? It will cost $100 to forfeit the match, and you have $" << character.GetMoney() << '\n';
+    std::cout << "1) Yes\n";
+    std::cout << "2) No\n";
+
+    int choice{ 0 };
+
+    std::cin >> choice;
+
+    if (choice == 1)
+    {
+        std::cout << "You forfeited the match, you lost $";
+
+        if (character.GetMoney() > 100)
+        {
+            character.SubtractMoney(100);
+            std::cout << "100\n\n";
+        }
+        else
+        {
+            std::cout << character.GetMoney() << "\n\n";
+            character.SubtractMoney(character.GetMoney());
+        }
+
+        return true;
+    }
+    else if (choice == 2)
+    {
+        return false;
     }
 }
 
