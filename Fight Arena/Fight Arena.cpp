@@ -257,6 +257,9 @@ void Test(Character& character, std::vector<Attack>& attackList);
 void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList);
 void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList);
 void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
+bool ForfeitMatch(Character& character);
+int ChooseAttack(const Character& character, const std::vector<Attack>& attackList);
+void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy);
 
 int main()
 {
@@ -275,7 +278,6 @@ int main()
     Attack stomp("Stomp", 7, 1);
 
     std::vector<Attack> attackList{ slash, scratch, fireBlast, stomp };
-
 
     bool isTesting{ false };
 
@@ -335,30 +337,13 @@ void Test(Character& character, std::vector<Attack>& attackList)
     std::cout << "Health: " << character.GetHealth() << std::boolalpha << " - Is Alive?: " << character.IsAlive() << '\n';
 }
 
-bool ForfeitMatch(Character& character);
-int ChooseAttack(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
-void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice);
-
 void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
 {
     int enemyIndex{ static_cast<int>(enemyList.size() - 1) };
 
-    std::uniform_int_distribution<int> randomizedEnemy{ 0, enemyIndex };
+    std::uniform_int_distribution<int> randomizeEnemy{ 0, enemyIndex };
 
-    int randomlyChosenEnemy{ randomizedEnemy(mt) };
-
-
-    int attackIndex{ static_cast<int>(attackList.size() - 1) };
-
-    std::uniform_int_distribution<int> randomizedAttack{ 0, attackIndex };
-
-    int randomlyChosenAttack{ randomizedAttack( mt) };
-
-
-    std::uniform_int_distribution<int> randomizedRewardMoney{ 9, 43 };
-
-    std::uniform_int_distribution<int> missAttackChance{0, 10};
-
+    int randomlyChosenEnemy{ randomizeEnemy(mt) };
 
     bool hasMatchEnded{ false };
 
@@ -382,8 +367,8 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
             case 1:
             {
                 int getChoice{ 0 };
-                getChoice = ChooseAttack(character, attackList, enemyList);
-                Battle(character, attackList, enemyList, getChoice);
+                getChoice = ChooseAttack(character, attackList);
+                Battle(character, attackList, enemyList, getChoice, randomlyChosenEnemy);
             }
             break;
 
@@ -397,28 +382,46 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
     }
 }
 
-int ChooseAttack(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
+int ChooseAttack(const Character& character, const std::vector<Attack>& attackList)
 {
-    std::cout << "Which one?\n\n";
+    bool hasChosenAttack{ false };
 
-    for (int counter{ 1 }; const auto & attack : attackList)
+    while (!hasChosenAttack)
     {
-        std::cout << counter++ << "). " << attack.GetName() << '\n';
-        std::cout << std::format("{:>5}", "") << " -PWR: " << attack.GetDamage(character.GetLevel()) << '\n';
-        std::cout << std::format("{:>5}", "") << " -LVL: " << attack.GetLevel() << '\n';
+        std::cout << "Which one?\n\n";
+
+        for (int counter{ 1 }; const auto & attack : attackList)
+        {
+            std::cout << counter++ << "). " << attack.GetName() << '\n';
+            std::cout << std::format("{:>5}", "") << " -PWR: " << attack.GetDamage(character.GetLevel()) << '\n';
+            std::cout << std::format("{:>5}", "") << " -LVL: " << attack.GetLevel() << '\n';
+        }
+
+        int choice{ 0 };
+
+        std::cin >> choice;
+
+        if(choice )
+
+        return choice;
     }
-
-    int choice{ 0 };
-
-    std::cin >> choice;
-
-    return choice;
 }
 
 //Finish This
-void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice)
+void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy)
 {
-    std::cout << character.GetName() << " used " << attackList[playersAttackChoice - 1].GetName() << "!\n\n";
+    std::uniform_int_distribution<int> randomizedRewardMoney{ 9, 43 };
+    std::uniform_int_distribution<int> missAttackChance{ 0, 10 };
+
+    int attackIndex{ static_cast<int>(attackList.size() - 1) };
+
+    std::uniform_int_distribution<int> randomizedAttack{ 0, attackIndex };
+
+    int randomlyChosenAttack{ randomizedAttack(mt) };
+
+
+    std::cout << character.GetName() << " used " << attackList[playersAttackChoice - 1].GetName() << " against the " << enemyList[randomlyChosenEnemy].GetName() << "!\n\n";
+
 }
 
 bool ForfeitMatch(Character& character)
