@@ -336,7 +336,8 @@ void Test(Character& character, std::vector<Attack>& attackList)
 }
 
 bool ForfeitMatch(Character& character);
-void UseAttack(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
+int ChooseAttack(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
+void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice);
 
 void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
 {
@@ -369,8 +370,8 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
     {
         std::cout << "What would you like to do?\n\n";
 
-        std::cout << "1) Use Attack\n";
-        std::cout << "2) Forfeit\n";
+        std::cout << "1) Attack\n";
+        std::cout << "2) Forfeit Match\n";
 
         int choice{ 0 };
 
@@ -379,8 +380,12 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
         switch (choice)
         {
             case 1:
-                UseAttack(character, attackList, enemyList);
-                break;
+            {
+                int getChoice{ 0 };
+                getChoice = ChooseAttack(character, attackList, enemyList);
+                Battle(character, attackList, enemyList, getChoice);
+            }
+            break;
 
             case 2:
                 hasMatchEnded = ForfeitMatch(character);
@@ -392,7 +397,7 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
     }
 }
 
-void UseAttack(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
+int ChooseAttack(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
 {
     std::cout << "Which one?\n\n";
 
@@ -406,6 +411,14 @@ void UseAttack(Character& character, const std::vector<Attack>& attackList, std:
     int choice{ 0 };
 
     std::cin >> choice;
+
+    return choice;
+}
+
+//Finish This
+void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice)
+{
+    std::cout << character.GetName() << " used " << attackList[playersAttackChoice - 1].GetName() << "!\n\n";
 }
 
 bool ForfeitMatch(Character& character)
