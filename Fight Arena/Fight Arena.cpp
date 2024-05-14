@@ -405,18 +405,18 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
     }
 }
 
-//Finish This
+//To Do
+//
+//Implement random attack miss chance
 bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy)
 {
-    std::uniform_int_distribution<int> randomizedRewardMoney{ 9, 43 };
     std::uniform_int_distribution<int> missAttackChance{ 0, 10 };
 
     int attackIndex{ static_cast<int>(attackList.size() - 1) };
 
-    std::uniform_int_distribution<int> randomizedAttack{ 0, attackIndex };
+    std::uniform_int_distribution<int> randomizedAttack{ 0, static_cast<int>(attackList.size() - 1) };
 
     int randomlyChosenAttack{ randomizedAttack(mt) };
-
 
     std::cout << character.GetName() << " used " << attackList[playersAttackChoice - 1].GetName() << " against the " << enemyList[randomlyChosenEnemy].GetName() << "!\n\n";
     std::cout << attackList[playersAttackChoice - 1].GetName() << " did " << attackList[playersAttackChoice - 1].GetDamage(character.GetLevel()) << " damage!\n";
@@ -425,11 +425,13 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
 
     std::cout << "The " << enemyList[randomlyChosenEnemy].GetName() << " has " << enemyList[randomlyChosenEnemy].GetHealth() << " HP left!\n";
 
-    int rewardMoney{ randomizedRewardMoney(mt) };
-
     if (enemyList[randomlyChosenEnemy].IsAlive() == false)
     {
         std::cout << "You defeated the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
+
+        std::uniform_int_distribution<int> randomizedRewardMoney{ 9, 43 };
+        int rewardMoney{ randomizedRewardMoney(mt) };
+
         std::cout << "You got $" << rewardMoney << "!\n";
         character.AddMoney(rewardMoney);
 
