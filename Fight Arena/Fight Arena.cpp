@@ -438,7 +438,7 @@ bool ForfeitMatch(Character& character)
     {
         std::cout << "You forfeited the match, you lost $";
 
-        if (character.GetMoney() > 100)
+        if (character.GetMoney() >= 100)
         {
             character.SubtractMoney(100);
             std::cout << "100\n\n";
