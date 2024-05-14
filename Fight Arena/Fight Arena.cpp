@@ -259,11 +259,11 @@ void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList);
 void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
 bool ForfeitMatch(Character& character);
 int ChooseAttack(const Character& character, const std::vector<Attack>& attackList);
-void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy);
+bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy);
 
 int main()
 {
-    Character player("Hero", 3, 1, 145);
+    Character player("Hero", 3, 1, 0);
 
     Character goblin("Goblin", 30, 1, 0);
     Character orc("Orc", 42, 1, 0);
@@ -368,7 +368,7 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
             {
                 int getChoice{ 0 };
                 getChoice = ChooseAttack(character, attackList);
-                Battle(character, attackList, enemyList, getChoice, randomlyChosenEnemy);
+                hasMatchEnded = Battle(character, attackList, enemyList, getChoice, randomlyChosenEnemy);
             }
             break;
 
@@ -401,14 +401,12 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
 
         std::cin >> choice;
 
-        if(choice )
-
         return choice;
     }
 }
 
 //Finish This
-void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy)
+bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy)
 {
     std::uniform_int_distribution<int> randomizedRewardMoney{ 9, 43 };
     std::uniform_int_distribution<int> missAttackChance{ 0, 10 };
@@ -421,7 +419,26 @@ void Battle(Character& character, const std::vector<Attack>& attackList, std::ve
 
 
     std::cout << character.GetName() << " used " << attackList[playersAttackChoice - 1].GetName() << " against the " << enemyList[randomlyChosenEnemy].GetName() << "!\n\n";
+    std::cout << attackList[playersAttackChoice - 1].GetName() << " did " << attackList[playersAttackChoice - 1].GetDamage(character.GetLevel()) << " damage!\n";
 
+    enemyList[randomlyChosenEnemy].SubtractHealth(attackList[playersAttackChoice - 1].GetDamage(character.GetLevel()));
+
+    std::cout << "The " << enemyList[randomlyChosenEnemy].GetName() << " has " << enemyList[randomlyChosenEnemy].GetHealth() << " HP left!\n";
+
+    int rewardMoney{ randomizedRewardMoney(mt) };
+
+    if (enemyList[randomlyChosenEnemy].IsAlive() == false)
+    {
+        std::cout << "You defeated the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
+        std::cout << "You got $" << rewardMoney << "!\n";
+        character.AddMoney(rewardMoney);
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool ForfeitMatch(Character& character)
