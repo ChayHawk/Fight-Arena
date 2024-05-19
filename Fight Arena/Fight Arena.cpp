@@ -1,107 +1,62 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <iomanip>
 #include <chrono>
 #include <random>
+#include <format>
+#include <cassert>
 #include <limits>
+
+std::mt19937 mt{ static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) };
 
 class Attack
 {
 public:
-    Attack(const std::string& name, double damage, int upgradeLevel)
-        : mName(name), mDamage(damage), mUpgradeLevel(upgradeLevel)
+    Attack(const std::string& name, int basePower, int level)
+        : mName(name), mBasePower(basePower), mLevel(level)
     {}
+    Attack() = default;
 
     std::string GetName() const
     {
         return mName;
     }
 
-    double GetDamage() const
+    int GetBasePower() const
     {
-        return mDamage;
+        return mBasePower;
     }
 
-    int GetUpgradeLevel() const
+    int GetLevel() const
     {
-        return mUpgradeLevel;
+        return mLevel;
     }
 
-    int GetMaxUpgradeLevel() const
+    int GetMaxLevel() const
     {
-        return mMaxUpgradeLevel;
+        return mMaxLevel;
     }
 
-    double GetDamageBase() const
+    int GetDamage(int characterLevel) const
     {
-        return mDamageBase;
+        return (mLevel * characterLevel) * mBasePower;
     }
 
-    double CalculateDamage(int characterLevel) const
+    void IncreaseLevel()
     {
-        return mDamage + mUpgradeLevel * (characterLevel / mDamageBase);
-    }
-
-    void IncreaseUpgradeLevel()
-    {
-        if (mUpgradeLevel < mMaxUpgradeLevel)
+        if (mLevel >= mMaxLevel)
         {
-            ++mUpgradeLevel;
+            mLevel = mMaxLevel;
+        }
+        else
+        {
+            ++mLevel;
         }
     }
 
-private:
-    std::string mName{ "" };
-    double mDamage{ 0.0 };
-    int mUpgradeLevel{ 1 };
-
-    static inline const double mDamageBase{ 3.67 };
-    static const int mMaxUpgradeLevel{ 10 };
-};
-
-class Character
-{
-public:
-    Character(const std::string& name, double health, int level, int money)
-        : mName(name), mHealth(health), mLevel(level), mMoney(money)
-    {}
-
-    void GiveHealth(double amount)
+    bool IsMaxLevel() const
     {
-        mHealth += amount;
-        if (mHealth > mMaxHealth)
-        {
-            mHealth = mMaxHealth;
-        }
-    }
-
-    void RemoveHealth(double amount)
-    {
-        mHealth -= amount;
-        if (mHealth < mMinHealth)
-        {
-            mHealth = mMinHealth;
-        }
-    }
-
-    void GiveExperience(double amount)
-    {
-        mExperience += amount;
-
-        if (mLevel <= mMaxLevel)
-        {
-            while (mExperience >= GetLevelStep())
-            {
-                double carryoverSum{ mExperience -= GetLevelStep() };
-                ++mLevel;
-            }
-        }
-    }
-
-    bool IsDead() const
-    {
-        if (mHealth == mMinHealth)
+        if (mLevel == mMaxLevel)
         {
             return true;
         }
@@ -111,145 +66,259 @@ public:
         }
     }
 
-    void ChangeName(std::string name)
-    {
-        mName = name;
-    }
-
-    double GetHealth() const
-    {
-        return mHealth;
-    }
-
-    double GetMaxHealth() const
-    {
-        return mMaxHealth;
-    }
-
-    std::string GetName() const
-    {
-        return mName;
-    }
-
-    double GetExperience() const
-    {
-        return mExperience;
-    }
-
-    int GetLevel() const
-    {
-        return mLevel;
-    }
-
-    int GetMoney() const
-    {
-        return mMoney;
-    }
-
-    int GetLevelStep() const
-    {
-        return mLevelUpPercentage * mLevel;
-    }
-
-    std::vector<Attack> GetAttacks() const
-    {
-        return mAttackList;
-    }
-
-    void LearnAttack(const Attack& attackToLearn)
-    {
-        mAttackList.push_back(attackToLearn);
-    }
-
 private:
     std::string mName{ "" };
-    double mHealth{ 100.0 };
-    double mExperience{ 0.0 };
+    int mBasePower{ 0 };
     int mLevel{ 1 };
-    int mMoney{ 100 };
-    std::vector<Attack> mAttackList{ };
 
-    static inline const int mMaxLevel{ 100 };
-    static inline const float mMaxHealth{ 100.0 };
-    static inline const float mMinHealth{ 0.0 };
-    static const int mLevelUpPercentage{ 500 };
+    static const int mMaxLevel{ 10 };
 };
 
-void DisplayInfo(const Character& character);
-void ChangePlayerName(Character& character);
-void MainMenu(Character& character, std::vector<Attack>& attackList, std::vector<Character>& enemyList);
+class Character
+{
+    public:
+        Character(const std::string& name, int health, int level, int money)
+            : mName(name), mHealth(health), mLevel(level), mMoney(money)
+        {}
+
+        //Done
+        std::string GetName() const
+        {
+            return mName;
+        }
+
+        //Done
+        int GetHealth() const
+        {
+            return mHealth;
+        }
+
+        //Done
+        int GetLevel() const
+        {
+            return mLevel;
+        }
+
+        //Done
+        int GetMoney() const
+        {
+            return mMoney;
+        }
+
+        //Done
+        int GetMaxLevel() const
+        {
+            return mMaxLevel;
+        }
+
+        //Done
+        int GetExperience() const
+        {
+            return mExperience;
+        }
+
+        //Done
+        bool IsMaxLevel() const
+        {
+            if (mLevel == mMaxLevel)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        //Done
+        void GiveExperience(int amount)
+        {
+            mExperience += amount;
+
+            // Cap the experience to a maximum value
+            if (mExperience > mMaxExperience)
+            {
+                mExperience = mMaxExperience;
+            }
+
+            // Level up as much as possible
+            while (mExperience >= mExperienceMultiplier && mLevel < mMaxLevel)
+            {
+                ++mLevel;
+                mExperience -= mExperienceMultiplier;
+            }
+
+            // Cap the level to a maximum value
+            if (mLevel > mMaxLevel)
+            {
+                mLevel = mMaxLevel;
+            }
+        }
+
+        //Done
+        void AddMoney(int amount)
+        {
+            if (amount > 0)
+            {
+                mMoney += amount;
+
+                if (mMoney >= mMaxMoney)
+                {
+                    mMoney = mMaxMoney;
+                }
+            }
+        }
+
+        void SubtractMoney(int amount)
+        {
+            if (amount > 0 && mMoney >= amount)
+            {
+                mMoney -= amount;
+            }
+        }
+
+        
+        void SetMoney(int amount)
+        {
+            mMoney = amount;
+
+            if (amount >= 0 && amount <= mMaxMoney)
+            {
+                mMoney = amount;
+            }
+        }
+
+        //Done
+        int CalculateExperience() const
+        {
+            return 500 * mLevel;
+        }
+
+        //Done
+        int GetMaxExperience() const
+        {
+            return mMaxExperience;
+        }
+
+        /**
+         * @brief Checks if the character is alive.
+         *
+         * This function checks if the character is still alive based on the character's current health.
+         *
+         * @return true if the character's health is greater than 0, false otherwise.
+         */
+        bool IsAlive() const
+        {
+            if (mHealth > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /**
+         * @brief Adds health to the character
+         *
+         * This function handles adding health to characters
+         *
+         * @param amount The amount of health to subtract
+         */
+        void AddHealth(int amount)
+        {
+            if (amount > 0)
+            {
+                mHealth += amount;
+
+                if (mHealth >= mMaxHealth)
+                {
+                    mHealth = mMaxHealth;
+                }
+            } 
+        }
+
+        /**
+         * @brief Subtracts health from the character
+         *
+         * This function handles subtracting health from the character. It ensures that the health 
+         * will not go into negative numbers.
+         *
+         * @param amount The amount of health to subtract
+         */
+        void SubtractHealth(int amount)
+        {
+            if (amount > 0)
+            {
+                mHealth -= amount;
+
+                if (mHealth < 0)
+                {
+                    mHealth = 0;
+                }
+            }
+        }
+
+    private:
+        std::string mName{ "" };
+        int mHealth{ 0 };
+        int mLevel{ 1 };
+        int mMoney{ 0 };
+        int mExperience{ 0 };
+
+        static const int mMaxLevel{ 100 };
+        static const int mMaxHealth{ 100 };
+        static const int mExperienceMultiplier{ 500 };
+        static const int mMaxExperience{ mExperienceMultiplier * mMaxLevel };
+        static const int mMaxMoney{ 99999999 };
+};
+
+void GetCharacterInfo(const Character& character, const std::vector<Attack>& attackList);
+void Test(Character& character, std::vector<Attack>& attackList);
+void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList);
+void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList);
+void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
+bool ForfeitMatch(Character& character);
+int ChooseAttack(const Character& character, const std::vector<Attack>& attackList);
+bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy);
 
 int main()
 {
-    Character hero("Hero", 100.0, 1, 1200);
+    Character player("Hero", 100, 1, 0);
 
-    Character goblin("Goblin", 45.00, 1, 20);
-    Character witch("Witch", 65.00, 1, 20);
-    Character elf("Elf", 40.00, 1, 20);
-    Character orc("Orc", 85.00, 1, 20);
-    Character werewolf("Werewolf", 90.00, 1, 20);
+    Character goblin("Goblin", 30, 1, 0);
+    Character orc("Orc", 42, 1, 0);
+    Character giant("Giant", 103, 1, 0);
+    Character werewolf("Werewolf", 92, 1, 0);
 
-    Attack scratch("Scratch", 2, 1);
+    std::vector<Character> enemyList{ goblin, orc, giant, werewolf };
+
     Attack slash("Slash", 4, 1);
+    Attack scratch("Scratch", 1, 1);
+    Attack fireBlast("Fire Blast", 12, 1);
+    Attack stomp("Stomp", 7, 1);
 
-    hero.LearnAttack(scratch);
-    hero.LearnAttack(slash);
+    std::vector<Attack> attackList{ slash, scratch, fireBlast, stomp };
 
-    std::vector<Attack> attackList{ scratch, slash };
-    std::vector<Character> enemyList{ goblin, witch, elf, orc, werewolf };
+    bool isTesting{ false };
 
-    MainMenu(hero, attackList, enemyList);
-}
-
-void DisplayInfo(const Character& character)
-{
-    std::cout << character.GetName() << '\n';
-    std::cout << "    -Hp:           " << character.GetHealth() << "/" << character.GetMaxHealth() << '\n';
-    std::cout << "    -Lvl:          " << character.GetLevel() << "/100" << '\n';
-    std::cout << "    -Exp:          " << character.GetExperience() << "/" << character.GetLevelStep() << "" << '\n';
-    std::cout << "    -Dead?:        " << std::boolalpha << character.IsDead() << '\n';
-    std::cout << "    -Attacks:    " << '\n';
-
-    if (character.GetAttacks().size() == 0)
+    if (isTesting == true)
     {
-        std::cout << "        -None";
+        Test(player, attackList);
     }
     else
     {
-        for (const auto& i : character.GetAttacks())
+        bool isGameEnded{ false };
+
+        while (!isGameEnded)
         {
-            std::cout << "        -Name:     " << i.GetName() << '\n';
-            std::cout << "        -Dmg:      " << std::setprecision(3) << i.CalculateDamage(character.GetLevel()) << "\n";
-            std::cout << "        -Lvl:      " << i.GetUpgradeLevel() << "/" << i.GetMaxUpgradeLevel() << "\n\n";
-        }
-    }
-}
+            std::cout << "What would you like to do?\n\n";
 
-void ChangePlayerName(Character& character)
-{
-    bool IsSuccessfullyRenamed{ false };
-
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-    while (IsSuccessfullyRenamed != true)
-    {
-        std::cout << "What would you like to change your name to?\n";
-        std::cout << '>';
-
-        std::string newName{ "" };
-        std::string oldName{ "" };
-
-        oldName = character.GetName();
-
-        std::getline(std::cin, newName);
-
-        if (newName.size() > 0)
-        {
-            std::cout << "Are  you sure you want to rename yourself from " << oldName << " to " << newName << "?\n";
-            std::cout << "1) Yes\n";
-            std::cout << "2) No\n";
-            std::cout << "3) Main Menu\n";
-            std::cout << '>';
+            std::cout << "1) Purchase Upgrades\n";
+            std::cout << "2) View Character Info\n";
+            std::cout << "3) Fight in Arena\n";
+            std::cout << "4) Exit\n\n";
 
             int choice{ 0 };
 
@@ -257,114 +326,58 @@ void ChangePlayerName(Character& character)
 
             switch (choice)
             {
-            case 1:
-                character.ChangeName(newName);
+                case 1:
+                    PurchaseUpgradesMenu(player, attackList);
+                    break;
 
-                std::cout << "Your name has been changed from " << oldName << " to " << newName << "!\n\n";
-                IsSuccessfullyRenamed = true;
-                break;
+                case 2:
+                    GetCharacterInfo(player, attackList);
+                    break;
 
-            case 2:
-                std::cout << "Give yourself a name.\n\n";
-                break;
+                case 3:
+                    Arena(player, attackList, enemyList);
+                    break;
 
-            case 3:
-                return;
+                case 4:
+                    isGameEnded = true;
+                    break;
 
-            default:
-                std::cout << "Error\n";
+                default:
+                    std::cout << "Incorrect selection\n\n";
             }
-        }
-        else
-        {
-            std::cout << "Please Choose a name\n";
         }
     }
 }
 
-std::mt19937 mt{ static_cast<unsigned int>(std::chrono::steady_clock::now().time_since_epoch().count()) };
-
-
-//Needs  finishing
-//
-//Need to finish writing code for  battling creatures
-void Battle(Character& player, std::vector<Character>& enemyList, std::vector<Attack>& attackList)
+void Test(Character& character, std::vector<Attack>& attackList)
 {
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cout << "Health: " << character.GetHealth() << std::boolalpha <<" - Is Alive?: " << character.IsAlive() << '\n';
 
-    std::uniform_int_distribution<int> randomEnemy{};
-    if (!enemyList.empty())
-    {
-        randomEnemy = std::uniform_int_distribution<int>(0, enemyList.size() - 1);
-    }
+    character.SubtractHealth(2);
+    character.SubtractHealth(1);
 
-    std::uniform_int_distribution<int> randomAttack{};
-    if (!attackList.empty())
-    {
-        randomAttack = std::uniform_int_distribution<int>(0, attackList.size() - 1);
-    }
-
-    bool IsBattleOver{ false };
-
-    int chooseRandomEnemy{ randomEnemy(mt) };
-
-    while (IsBattleOver != true)
-    {
-        if (!enemyList.empty())
-        {
-            //This could probably be moved outside of the while loop since were going to have one fight per round.
-            std::cout << "A " << enemyList[chooseRandomEnemy].GetName() << " has appeared!\n\n";
-
-            std::cout << "Do what?\n\n";
-
-            std::cout << "1)Attack\n";
-            std::cout << "2)Forfit\n";
-
-            int choice{ 0 };
-            std::cin >> choice;
-
-            switch (choice)
-            {
-            case 1:
-                std::cout << "Use What Move?\n\n";
-
-                for (const auto& i : attackList)
-                {
-                    std::cout << i.GetName() << " -Dmg: " << i.CalculateDamage(player.GetLevel()) << '\n';
-                }
-                break;
-
-            case 2:
-                return;
-
-            default:
-                std::cout << choice << " is not a valid selection\n";
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-            }
-
-            std::cin.get();
-        }
-        else
-        {
-            std::cout << "There are no enemies to fight!\n";
-            return;
-        }
-    }
+    std::cout << "Health: " << character.GetHealth() << std::boolalpha << " - Is Alive?: " << character.IsAlive() << '\n';
 }
 
-void MainMenu(Character& character, std::vector<Attack>& attackList, std::vector<Character>& enemyList)
+void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
 {
-    bool IsGameRunning{ true };
+    int enemyIndex{ static_cast<int>(enemyList.size() - 1) };
 
-    while (IsGameRunning)
+    std::uniform_int_distribution<int> randomizeEnemy{ 0, enemyIndex };
+    int randomlyChosenEnemy{ randomizeEnemy(mt) };
+
+    std::cout << "Welcome to the arena! this is your opponent:\n";
+    std::cout << "A level " << enemyList[randomlyChosenEnemy].GetLevel()  << " " << enemyList[randomlyChosenEnemy].GetName() << " with " << enemyList[randomlyChosenEnemy].GetHealth() << " HP!\n\n";
+
+    int choice{ 0 };
+    bool endMatch{ false };
+
+    while(endMatch != true)
     {
-        std::cout << "Please Make a selection\n\n";
+        std::cout << "What would you like to do?\n\n";
 
-        std::cout << "1) Change Name\n";
-        std::cout << "2) Fight\n";
-        std::cout << "3) View Stats\n";
-        std::cout << "4) Quit\n";
-        std::cout << '>';
+        std::cout << "1) Attack\n";
+        std::cout << "2) Forfeit Match\n";
 
         int choice{ 0 };
 
@@ -372,23 +385,304 @@ void MainMenu(Character& character, std::vector<Attack>& attackList, std::vector
 
         switch (choice)
         {
-        case  1:
-            ChangePlayerName(character);
+            case 1:
+            {
+                endMatch = Battle(character, attackList, enemyList, randomlyChosenEnemy);
+            }
+            break;
+
+            case 2:
+                endMatch = ForfeitMatch(character);
+                break;
+
+            default:
+                std::cout << "Incorrect choice\n\n";
+        }
+    }
+}
+
+int ChooseAttack(const Character& character, const std::vector<Attack>& attackList)
+{
+    bool hasChosenAttack{ false };
+
+    while (hasChosenAttack != true)
+    {
+        std::cout << "Choose  an attack to use:\n\n";
+
+        for (int counter{ 1 }; const auto & attack : attackList)
+        {
+            std::cout << counter++ << "). " << attack.GetName() << '\n';
+            std::cout << std::format("{:>5}", "") << " -PWR: " << attack.GetDamage(character.GetLevel()) << '\n';
+            std::cout << std::format("{:>5}", "") << " -LVL: " << attack.GetLevel() << '\n';
+        }
+
+        int choice{ 0 };
+
+        std::cin >> choice;
+
+        //Add error handling for incorrect choices and make it so when the user selects a right choice the while loop ends
+        //I believe the return statement will forcibly return a value and end the while loop so a true false to end the loop
+        //May not be needed.
+
+        if (choice <= attackList.size())
+        {
+            return choice;
+        }
+        else
+        {
+            hasChosenAttack = false;
+        }
+    }
+}
+
+
+/**
+* @brief Battle enemies here
+*
+* This function is where the player battles enemies to earn money to buy upgrades with.
+*
+* @param character
+* @param attackList
+* @param enemyList
+* @param randomlyChosenEnemy
+* @return Returns a value that says if the player or enemy have died
+*/
+bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy)
+{
+    std::uniform_int_distribution<int> missAttackChance{ 0, 5 };
+
+    std::uniform_int_distribution<int> randomizedAttack{ 0, static_cast<int>(attackList.size() - 1) };
+    int randomlyChosenAttack{ randomizedAttack(mt) };
+
+    std::uniform_int_distribution<int> randomPrizeMoney{ 10, 50 };
+    std::uniform_int_distribution<int> randomExperience{ 20, 75 };
+
+    int experienceReward{ randomExperience(mt) };
+
+    int attackChoice{ 0 };
+    attackChoice = ChooseAttack(character, attackList);
+
+    std::cout << character.GetName() << "s HP: " << character.GetHealth() << '\n';
+    std::cout << enemyList[randomlyChosenEnemy].GetName() << "s HP: " << enemyList[randomlyChosenEnemy].GetHealth() << "\n\n";
+
+    //TODO
+    //
+    //Give player experience for defeating enemies
+
+    if(character.IsAlive() == true && enemyList[randomlyChosenEnemy].IsAlive() == true)
+    {
+        std::cout << character.GetName() << " used " << attackList[attackChoice - 1].GetName() << "!\n";
+
+        //Check if players attack missed
+        if (missAttackChance(mt) == 5)
+        {
+            std::cout << "Your attack missed!\n";
+        }
+        else
+        {
+            std::cout << "It did " << attackList[attackChoice - 1].GetDamage(character.GetLevel()) << " damage!\n\n";
+            enemyList[randomlyChosenEnemy].SubtractHealth(attackList[attackChoice - 1].GetDamage(character.GetLevel()));
+
+            //Enemies turn
+            std::cout << "The " << enemyList[randomlyChosenEnemy].GetName() << " used " << attackList[randomlyChosenAttack].GetName() << "!\n";
+
+            if (missAttackChance(mt) == 5)
+            {
+                std::cout << enemyList[randomlyChosenEnemy].GetName() << "s attack missed!\n\n";
+            }
+            else
+            {
+                std::cout << "It did " << attackList[randomlyChosenAttack].GetDamage(character.GetLevel()) << " damage\n\n";
+                character.SubtractHealth(attackList[randomlyChosenAttack].GetDamage(character.GetLevel()));
+            }
+        }
+    }
+    else
+    {
+        if(character.IsAlive() == false && enemyList[randomlyChosenEnemy].IsAlive() == true)
+        {
+            std::cout << "You died!\n\n";
+
+            return true;
+        }
+        else if(enemyList[randomlyChosenEnemy].IsAlive() == false && character.IsAlive() == true)
+        {
+            int prizeMoney{ randomPrizeMoney(mt) };
+
+            std::cout << "You defeated the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
+            std::cout << "You won $" << prizeMoney << " as prize money.\n";
+
+            character.AddMoney(prizeMoney);
+
+            std::cout << "You gained " << experienceReward << " experience.\n\n";
+
+            character.GiveExperience(experienceReward);
+
+            return true;
+        }
+        else if (character.IsAlive() == false && enemyList[randomlyChosenEnemy].IsAlive() == false)
+        {
+            std::cout << "You both killed each other at the same time, it's a draw! what a show!\n\n";
+
+            return true;
+        }
+    }
+}
+
+bool ForfeitMatch(Character& character)
+{
+    std::cout << "Are you sure? It will cost $100 to forfeit the match, and you have $" << character.GetMoney() << '\n';
+    std::cout << "1) Yes\n";
+    std::cout << "2) No\n";
+
+    int choice{ 0 };
+
+    std::cin >> choice;
+
+    if (choice == 1)
+    {
+        std::cout << "You forfeited the match, you lost $";
+
+        if (character.GetMoney() >= 100)
+        {
+            character.SubtractMoney(100);
+            std::cout << "100\n\n";
+        }
+        else
+        {
+            std::cout << character.GetMoney() << "\n\n";
+            character.SubtractMoney(character.GetMoney());
+        }
+
+        return true;
+    }
+    else if (choice == 2)
+    {
+        return false;
+    }
+}
+
+void GetCharacterInfo(const Character& character, const std::vector<Attack>& attackList)
+{
+    std::cout << character.GetName() << '\n';
+    std::cout << std::format("{:>4}", "") << "-HP: " << character.GetHealth() << '\n';
+    std::cout << std::format("{:>4}", "") << "-Level: " << character.GetLevel() << '\n';
+    std::cout << std::format("{:>4}", "") << "-$" << character.GetMoney() << '\n';
+
+    std::cout << "\nAttacks\n";
+    for (const auto& attack : attackList)
+    {
+        std::cout << std::format("{:>4}", "") << attack.GetName() << '\n';
+        std::cout << std::format("{:>8}", "") << "-Base Power: " << attack.GetBasePower() << '\n';
+        std::cout << std::format("{:>8}", "") << "-Attack Power: " << attack.GetDamage(character.GetLevel()) << "\n\n";
+    }
+}
+
+/**
+ * @brief Select what you want to upgrade
+ *
+ * This function allows the player to choose what they want to upgrade.
+ *
+ * @param character The player's character performing the attack.
+ * @param attackList A list of possible attacks the player's character can use.
+ * @return None
+ */
+void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
+{
+    std::cout << "What would you like to purchase upgrades for?\n";
+    std::cout << "Cash $" << character.GetMoney() << "\n\n";
+
+    std::cout << "1) Attacks\n";
+    std::cout << "2) Return\n";
+
+    int choice{ 0 };
+
+    std::cin >> choice;
+
+    switch (choice)
+    {
+        case 1:
+            PurchaseUpgrades(character, attackList);
             break;
 
         case 2:
-            Battle(character, enemyList, attackList);
-            break;
-
-        case 3:
-            DisplayInfo(character);
-            break;
-
-        case 4:
             return;
 
         default:
-            std::cout << "Error\n";
+            std::cout << "Incorrect choice\n";
+    }
+}
+
+/**
+ * @brief Purchase upgrades
+ *
+ * This function allows the player to purchase upgrades for their character and for their attacks by using
+ * money earned from fighting in the arena.
+ *
+ * @param character The player's character performing the attack.
+ * @param attackList A list of possible attacks the player's character can use.
+ * @return None
+ */
+void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList)
+{
+    std::cout << "\nWhich attack would you like to upgrade?\n\n";
+
+    for (int counter{ 1 }; const auto & attack : attackList)
+    {
+        std::cout << counter++ << ") " << attack.GetName() << " -Level: " << attack.GetLevel() << '\n';
+    }
+
+    std::cout << '\n';
+
+    int choice{ 0 };
+
+    std::cin >> choice;
+
+    int upgradeStep{ 0 };
+    auto attackToUpgrade{ 0 };
+
+    if (choice <= attackList.size())
+    {
+        upgradeStep = 500 * attackList[choice - 1].GetLevel();
+        attackToUpgrade = attackList[choice - 1].GetLevel();
+
+        if (character.GetMoney() > upgradeStep)
+        {
+            std::cout << attackList[choice - 1].GetName() << " will cost " << upgradeStep << " to upgrade to level " << attackList[choice - 1].GetLevel() + 1 << ".\n";
+            std::cout << "You currently have $" << character.GetMoney() << " continue with upgrade?\n";
+
+            int choice{ 0 };
+
+            std::cout << "1) Yes\n";
+            std::cout << "2) No\n";
+
+            std::cin >> choice;
+
+            if (choice == 1)
+            {
+                attackList[choice - 1].IncreaseLevel();
+                character.SubtractMoney(upgradeStep);
+
+                std::cout << "You currently have $" << character.GetMoney() << " and your " << attackList[choice - 1].GetName()
+                    << " attack is at level " << attackList[choice - 1].GetLevel() << "!\n";
+            }
+            else if (choice == 2)
+            {
+                std::cout << "Come back anytime\n\n";
+                return;
+            }
+            else
+            {
+                std::cout << "Huh?\n";
+            }
         }
+        else
+        {
+            std::cout << "It seems you do not posses enough funds to perform this upgrade.\n";
+        }
+    }
+    else
+    {
+        std::cout << "It doesnt seem like that was a valid choice, please choose again.\n\n";
     }
 }
