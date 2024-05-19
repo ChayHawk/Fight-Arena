@@ -200,6 +200,13 @@ class Character
             return mMaxExperience;
         }
 
+        /**
+         * @brief Checks if the character is alive.
+         *
+         * This function checks if the character is still alive based on the character's current health.
+         *
+         * @return true if the character's health is greater than 0, false otherwise.
+         */
         bool IsAlive() const
         {
             if (mHealth > 0)
@@ -212,7 +219,13 @@ class Character
             }
         }
 
-        //Done
+        /**
+         * @brief Adds health to the character
+         *
+         * This function handles adding health to characters
+         *
+         * @param amount The amount of health to subtract
+         */
         void AddHealth(int amount)
         {
             if (amount > 0)
@@ -229,10 +242,10 @@ class Character
         /**
          * @brief Subtracts health from the character
          *
-         * This function handles removing health from characters
+         * This function handles subtracting health from the character. It ensures that the health 
+         * will not go into negative numbers.
          *
          * @param amount The amount of health to subtract
-         * @return None
          */
         void SubtractHealth(int amount)
         {
@@ -268,7 +281,7 @@ void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList);
 void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
 bool ForfeitMatch(Character& character);
 int ChooseAttack(const Character& character, const std::vector<Attack>& attackList);
-void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy);
+bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy);
 
 int main()
 {
@@ -357,9 +370,9 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
     std::cout << "A level " << enemyList[randomlyChosenEnemy].GetLevel()  << " " << enemyList[randomlyChosenEnemy].GetName() << " with " << enemyList[randomlyChosenEnemy].GetHealth() << " HP!\n\n";
 
     int choice{ 0 };
-    bool forfeitMatch{ false };
+    bool endMatch{ false };
 
-    while(forfeitMatch != true)
+    while(endMatch != true)
     {
         std::cout << "What would you like to do?\n\n";
 
@@ -374,14 +387,12 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
         {
             case 1:
             {
-                int attackChoice{ 0 };
-                attackChoice = ChooseAttack(character, attackList);
-                Battle(character, attackList, enemyList, attackChoice, randomlyChosenEnemy);
+                endMatch = Battle(character, attackList, enemyList, randomlyChosenEnemy);
             }
             break;
 
             case 2:
-                forfeitMatch = ForfeitMatch(character);
+                endMatch = ForfeitMatch(character);
                 break;
 
             default:
@@ -394,9 +405,9 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
 {
     bool hasChosenAttack{ false };
 
-    while (!hasChosenAttack)
+    while (hasChosenAttack != true)
     {
-        std::cout << "Which one?\n\n";
+        std::cout << "Choose  an attack to use:\n\n";
 
         for (int counter{ 1 }; const auto & attack : attackList)
         {
@@ -409,51 +420,22 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
 
         std::cin >> choice;
 
-        return choice;
+        //Add error handling for incorrect choices and make it so when the user selects a right choice the while loop ends
+        //I believe the return statement will forcibly return a value and end the while loop so a true false to end the loop
+        //May not be needed.
+
+        if (choice <= attackList.size() - 1)
+        {
+            return choice;
+        }
+        else
+        {
+            hasChosenAttack = false;
+        }
     }
 }
 
-bool TakeTurn(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy, bool playersTurn);
-
-/**
- * @brief Simulates a battle between the player's character and a randomly chosen enemy.
- *
- * This function handles the attack phase where the player attacks an enemy and checks if the enemy is defeated.
- * It also randomly determines if the player's attack misses.
- *
- * @param character The player's character performing the attack.
- * @param attackList A list of possible attacks the player's character can use.
- * @param enemyList A list of enemies the player's character can fight.
- * @param playersAttackChoice The index of the attack chosen by the player.
- * @param randomlyChosenEnemy The index of the randomly chosen enemy to fight.
- * @return true if the enemy is defeated and the battle is over, false otherwise.
- */
-void Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy)
-{
-    std::cout << "Good Luck!\n\n";
-
-    std::cout << character.GetName() << " - HP: " << character.GetHealth() << '\n';
-    std::cout << enemyList[randomlyChosenEnemy].GetName() << " - HP: " << enemyList[randomlyChosenEnemy].GetHealth() << "\n\n";
-
-    TakeTurn(character, attackList, enemyList, playersAttackChoice, randomlyChosenEnemy, true);
-    TakeTurn(character, attackList, enemyList, playersAttackChoice, randomlyChosenEnemy, false);
-}
-
-
-/**
- * @brief Decide whos turn it is
- *
- * This function decidedes if an enemy goes or the player does.
- *
- * @param character The player's character performing the attack.
- * @param attackList A list of possible attacks the player's character can use.
- * @param enemyList A list of enemies the player's character can fight.
- * @param playersAttackChoice The index of the attack chosen by the player.
- * @param randomlyChosenEnemy The index of the randomly chosen enemy to fight.
- * @param playersTurn A boolean value that determines if its the player or enemies turn
- * @return None
- */
-bool TakeTurn(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int playersAttackChoice, int randomlyChosenEnemy, bool playersTurn)
+bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy)
 {
     std::uniform_int_distribution<int> missAttackChance{ 0, 5 };
 
@@ -462,61 +444,60 @@ bool TakeTurn(Character& character, const std::vector<Attack>& attackList, std::
 
     std::uniform_int_distribution<int> randomPrizeMoney{ 10, 50 };
 
-   
-    //BUGS
-    //
-    //When the match ends and the enemy is killed, the enemy will still attack
-    //The game does not return to the main menu afterwards.
-    if (playersTurn == true)
+    int attackChoice{ 0 };
+    attackChoice = ChooseAttack(character, attackList);
+
+    std::cout << character.GetName() << "s HP: " << character.GetHealth() << '\n';
+    std::cout << enemyList[randomlyChosenEnemy].GetName() << "s HP: " << enemyList[randomlyChosenEnemy].GetHealth() << "\n\n";
+
+    if(character.IsAlive() == true && enemyList[randomlyChosenEnemy].IsAlive() == true)
     {
+        std::cout << character.GetName() << "  used " << attackList[attackChoice - 1].GetName() << "!\n";
+
+        //Check if players attack missed
         if (missAttackChance(mt) == 5)
         {
-            std::cout << "Your attack missed!\n\n";
+            std::cout << "Your attack missed!\n";
         }
         else
         {
-            std::cout << character.GetName() << " used " << attackList[playersAttackChoice - 1].GetName() << "!\n";
-            std::cout << "It did " << attackList[playersAttackChoice - 1].GetDamage(character.GetLevel()) << " damage!\n\n";
+            std::cout << "It did " << attackList[attackChoice - 1].GetDamage(character.GetLevel()) << " damage!\n\n";
+            enemyList[randomlyChosenEnemy].SubtractHealth(attackList[attackChoice - 1].GetDamage(character.GetLevel()));
 
-            enemyList[randomlyChosenEnemy].SubtractHealth(attackList[playersAttackChoice - 1].GetDamage(character.GetLevel()));
+            //Enemies turn
+            std::cout << "The " << enemyList[randomlyChosenEnemy].GetName() << " used " << attackList[randomlyChosenAttack].GetName() << "!\n";
 
-            if (enemyList[randomlyChosenEnemy].IsAlive() == false)
+            if (missAttackChance(mt) == 5)
             {
-                std::cout << "You slayed the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
-                std::cout << "You got $" << randomPrizeMoney(mt) << " as prize money!\n";
-
-                return true;
+                std::cout << enemyList[randomlyChosenEnemy].GetName() << "s attack missed!\n\n";
+            }
+            else
+            {
+                std::cout << "It did " << attackList[randomlyChosenAttack].GetDamage(character.GetLevel()) << " damage\n\n";
+                character.SubtractHealth(attackList[randomlyChosenAttack].GetDamage(character.GetLevel()));
             }
         }
     }
     else
     {
-        if (missAttackChance(mt) == 5)
+        if(character.IsAlive() == false && enemyList[randomlyChosenEnemy].IsAlive() == true)
         {
-            std::cout << enemyList[randomlyChosenEnemy].GetName() << "s attack missed!\n\n";
+            std::cout << "You died!\n\n";
+
+            return true;
         }
-        else
+        else if(enemyList[randomlyChosenEnemy].IsAlive() == false && character.IsAlive() == true)
         {
-            std::cout << enemyList[randomlyChosenEnemy].GetName() << " used " << attackList[randomlyChosenAttack].GetName() << "!\n";
-            std::cout << "It did " << attackList[randomlyChosenAttack].GetDamage(character.GetLevel()) << " damage!\n\n";
+            std::cout << "You defeated the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
+            std::cout << "You won " << randomPrizeMoney(mt) << " as prize money.\n\n";
 
-            character.SubtractHealth(attackList[randomlyChosenAttack].GetDamage(character.GetLevel()));
+            return true;
+        }
+        else if (character.IsAlive() == false && enemyList[randomlyChosenEnemy].IsAlive() == false)
+        {
+            std::cout << "You both killed each other at the same time, what a show!\n\n";
 
-            if (character.IsAlive() == false)
-            {
-                std::cout << "You died!\n";
-
-                int amountLost = character.GetMoney() % 10;
-
-                if (character.GetMoney() >= amountLost)
-                {
-                    std::cout << "You lost $" << amountLost << " for losing the match\n\n";
-
-                    character.SubtractMoney(amountLost);
-                }
-
-                return true;
-            }
+            return true;
         }
     }
 }
