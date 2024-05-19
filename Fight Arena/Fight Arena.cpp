@@ -500,8 +500,12 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
         }
         else if(enemyList[randomlyChosenEnemy].IsAlive() == false && character.IsAlive() == true)
         {
+            int prizeMoney{ randomPrizeMoney(mt) };
+
             std::cout << "You defeated the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
-            std::cout << "You won $" << randomPrizeMoney(mt) << " as prize money.\n\n";
+            std::cout << "You won $" << prizeMoney << " as prize money.\n\n";
+
+            character.AddMoney(prizeMoney);
 
             return true;
         }
