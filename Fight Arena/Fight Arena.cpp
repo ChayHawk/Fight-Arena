@@ -455,12 +455,19 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
     int randomlyChosenAttack{ randomizedAttack(mt) };
 
     std::uniform_int_distribution<int> randomPrizeMoney{ 10, 50 };
+    std::uniform_int_distribution<int> randomExperience{ 20, 75 };
+
+    int experienceReward{ randomExperience(mt) };
 
     int attackChoice{ 0 };
     attackChoice = ChooseAttack(character, attackList);
 
     std::cout << character.GetName() << "s HP: " << character.GetHealth() << '\n';
     std::cout << enemyList[randomlyChosenEnemy].GetName() << "s HP: " << enemyList[randomlyChosenEnemy].GetHealth() << "\n\n";
+
+    //TODO
+    //
+    //Give player experience for defeating enemies
 
     if(character.IsAlive() == true && enemyList[randomlyChosenEnemy].IsAlive() == true)
     {
@@ -503,9 +510,13 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
             int prizeMoney{ randomPrizeMoney(mt) };
 
             std::cout << "You defeated the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
-            std::cout << "You won $" << prizeMoney << " as prize money.\n\n";
+            std::cout << "You won $" << prizeMoney << " as prize money.\n";
 
             character.AddMoney(prizeMoney);
+
+            std::cout << "You gained " << experienceReward << " experience.\n\n";
+
+            character.GiveExperience(experienceReward);
 
             return true;
         }
