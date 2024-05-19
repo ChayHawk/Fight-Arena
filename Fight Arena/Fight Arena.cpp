@@ -435,6 +435,18 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
     }
 }
 
+
+/**
+* @brief Battle enemies here
+*
+* This function is where the player battles enemies.
+*
+* @param character
+* @param attackList
+* @param enemyList
+* @param randomlyChosenEnemy
+* @return Returns a value that says if the player or enemy have died
+*/
 bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy)
 {
     std::uniform_int_distribution<int> missAttackChance{ 0, 5 };
@@ -489,7 +501,7 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
         else if(enemyList[randomlyChosenEnemy].IsAlive() == false && character.IsAlive() == true)
         {
             std::cout << "You defeated the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
-            std::cout << "You won " << randomPrizeMoney(mt) << " as prize money.\n\n";
+            std::cout << "You won $" << randomPrizeMoney(mt) << " as prize money.\n\n";
 
             return true;
         }
