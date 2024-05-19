@@ -424,7 +424,7 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
         //I believe the return statement will forcibly return a value and end the while loop so a true false to end the loop
         //May not be needed.
 
-        if (choice <= attackList.size() - 1)
+        if (choice <= attackList.size())
         {
             return choice;
         }
@@ -439,7 +439,7 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
 /**
 * @brief Battle enemies here
 *
-* This function is where the player battles enemies.
+* This function is where the player battles enemies to earn money to buy upgrades with.
 *
 * @param character
 * @param attackList
@@ -464,7 +464,7 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
 
     if(character.IsAlive() == true && enemyList[randomlyChosenEnemy].IsAlive() == true)
     {
-        std::cout << character.GetName() << "  used " << attackList[attackChoice - 1].GetName() << "!\n";
+        std::cout << character.GetName() << " used " << attackList[attackChoice - 1].GetName() << "!\n";
 
         //Check if players attack missed
         if (missAttackChance(mt) == 5)
@@ -507,7 +507,7 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
         }
         else if (character.IsAlive() == false && enemyList[randomlyChosenEnemy].IsAlive() == false)
         {
-            std::cout << "You both killed each other at the same time, what a show!\n\n";
+            std::cout << "You both killed each other at the same time, it's a draw! what a show!\n\n";
 
             return true;
         }
