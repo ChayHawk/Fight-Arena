@@ -277,7 +277,7 @@ class Character
 void GetCharacterInfo(const Character& character, const std::vector<Attack>& attackList);
 void Test(Character& character, std::vector<Attack>& attackList);
 void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList);
-void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList);
+void PurchaseAttackUpgrades(Character& character, std::vector<Attack>& attackList);
 void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
 bool ForfeitMatch(Character& character);
 int ChooseAttack(const Character& character, const std::vector<Attack>& attackList);
@@ -602,7 +602,7 @@ void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
     switch (choice)
     {
         case 1:
-            PurchaseUpgrades(character, attackList);
+            PurchaseAttackUpgrades(character, attackList);
             break;
 
         case 2:
@@ -623,7 +623,7 @@ void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
  * @param attackList A list of possible attacks the player's character can use.
  * @return None
  */
-void PurchaseUpgrades(Character& character, std::vector<Attack>& attackList)
+void PurchaseAttackUpgrades(Character& character, std::vector<Attack>& attackList)
 {
     std::cout << "\nWhich attack would you like to upgrade?\n\n";
 
