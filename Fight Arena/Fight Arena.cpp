@@ -412,6 +412,18 @@ void Arena(Character& character, const std::vector<Attack>& attackList, std::vec
     }
 }
 
+/**
+* @version 1.0
+* @date 5/22/2024 @ 12:37 PM
+* @brief Choose an attack to use
+*
+* This function is where the player will choose their attack to use against the enemy.
+*
+* @param character The player's character performing the attack.
+* @param attackList A list of possible attacks the player's character can use.
+* @return Returns the players attack choice
+* @warning This function does not have user input handling!
+*/
 int ChooseAttack(const Character& character, const std::vector<Attack>& attackList)
 {
     bool hasChosenAttack{ false };
@@ -452,11 +464,14 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
 *
 * This function is where the player battles enemies to earn money to buy upgrades with.
 *
-* @param character
-* @param attackList
-* @param enemyList
-* @param randomlyChosenEnemy
+* @param character The player's character performing the attack.
+* @param attackList A list of possible attacks the player's character can use.
+* @param enemyList A list of enemies for the player to battle
+* @param randomlyChosenEnemy A value containing a random number
+* @details The 'randomlyChosenEnemy' variable is set each time the player is about to battle, 
+* this ensures the player gets a random enemy each time.
 * @return Returns a value that says if the player or enemy have died
+* @warning This function does not have user input handling!
 */
 bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy)
 {
@@ -475,10 +490,6 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
 
     std::cout << character.GetName() << "s HP: " << character.GetHealth() << '\n';
     std::cout << enemyList[randomlyChosenEnemy].GetName() << "s HP: " << enemyList[randomlyChosenEnemy].GetHealth() << "\n\n";
-
-    //TODO
-    //
-    //Give player experience for defeating enemies
 
     if(character.IsAlive() == true && enemyList[randomlyChosenEnemy].IsAlive() == true)
     {
@@ -596,7 +607,6 @@ void GetCharacterInfo(const Character& character, const std::vector<Attack>& att
  *
  * @param character The player's character performing the attack.
  * @param attackList A list of possible attacks the player's character can use.
- * @return None
  */
 void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
 {
@@ -631,7 +641,6 @@ void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
  *
  * @param character The player's character performing the attack.
  * @param attackList A list of possible attacks the player's character can use.
- * @return None
  */
 void PurchaseAttackUpgrades(Character& character, std::vector<Attack>& attackList)
 {
