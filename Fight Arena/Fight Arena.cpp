@@ -322,10 +322,20 @@ int main()
 
             int choice{ 0 };
 
+            //TODO
+            // 
+            //This code does not catch characters that are entered. Need to make a function 
+            //that handles all input.
             std::cin >> choice;
 
-            switch (choice)
+            if (choice > 4)
             {
+                std::cout << "Invalid Choice\n";
+            }
+            else
+            {
+                switch (choice)
+                {
                 case 1:
                     PurchaseUpgradesMenu(player, attackList);
                     break;
@@ -344,6 +354,7 @@ int main()
 
                 default:
                     std::cout << "Incorrect selection\n\n";
+                }
             }
         }
     }
@@ -589,8 +600,7 @@ void GetCharacterInfo(const Character& character, const std::vector<Attack>& att
  */
 void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
 {
-    std::cout << "What would you like to purchase upgrades for?\n";
-    std::cout << "Cash $" << character.GetMoney() << "\n\n";
+    std::cout << "What would you like to purchase upgrades for?\n\n";
 
     std::cout << "1) Attacks\n";
     std::cout << "2) Return\n";
@@ -625,11 +635,15 @@ void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList)
  */
 void PurchaseAttackUpgrades(Character& character, std::vector<Attack>& attackList)
 {
+    character.AddMoney(5000);
     std::cout << "\nWhich attack would you like to upgrade?\n\n";
+    std::cout << "Cash $" << character.GetMoney() << "\n\n";
+
+    int attackListIndex{ 0 };
 
     for (int counter{ 1 }; const auto & attack : attackList)
     {
-        std::cout << counter++ << ") " << attack.GetName() << " -Level: " << attack.GetLevel() << '\n';
+        std::cout << counter++ << ") " << attack.GetName() << " -Level: " << attack.GetLevel() << " -Upgrade Cost $" << 500 * attackList[attackListIndex++].GetLevel() << '\n';
     }
 
     std::cout << '\n';
@@ -637,7 +651,7 @@ void PurchaseAttackUpgrades(Character& character, std::vector<Attack>& attackLis
     int choice{ 0 };
 
     std::cin >> choice;
-
+    
     int upgradeStep{ 0 };
     auto attackToUpgrade{ 0 };
 
@@ -646,7 +660,7 @@ void PurchaseAttackUpgrades(Character& character, std::vector<Attack>& attackLis
         upgradeStep = 500 * attackList[choice - 1].GetLevel();
         attackToUpgrade = attackList[choice - 1].GetLevel();
 
-        if (character.GetMoney() > upgradeStep)
+        if (character.GetMoney() >= upgradeStep)
         {
             std::cout << attackList[choice - 1].GetName() << " will cost " << upgradeStep << " to upgrade to level " << attackList[choice - 1].GetLevel() + 1 << ".\n";
             std::cout << "You currently have $" << character.GetMoney() << " continue with upgrade?\n";
