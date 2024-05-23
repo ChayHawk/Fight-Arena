@@ -6,14 +6,15 @@
 #include <format>
 #include <cassert>
 #include <limits>
+#include <algorithm>
 
 std::mt19937 mt{ static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) };
 
 class Attack
 {
 public:
-    Attack(const std::string& name, int basePower, int level)
-        : mName(name), mBasePower(basePower), mLevel(level)
+    Attack(const std::string& name, int basePower, int level, int attackUses, int  maxAttackUses)
+        : mName(name), mBasePower(basePower), mLevel(level), mAttackUses(attackUses), mMaxAttackUses(maxAttackUses)
     {}
     Attack() = default;
 
@@ -66,10 +67,66 @@ public:
         }
     }
 
+    int GetAttackUses() const
+    {
+        return mAttackUses;
+    }
+
+    int GetMaxAttackUses() const
+    {
+        return mMaxAttackUses;
+    }
+
+    void IncrementAttackUses()
+    {
+        if (mAttackUses >= mMaxAttackUses)
+        {
+            mAttackUses = mMaxAttackUses;
+        }
+        else
+        {
+            ++mAttackUses;
+        }
+    }
+
+    void DecrementAttackUses()
+    {
+        if (mAttackUses > 0)
+        {
+            --mAttackUses;
+        }
+    }
+
+    void SetAttackUses(int setAttackUses)
+    {
+        if (setAttackUses > 0)
+        {
+            if (setAttackUses > mMaxAttackUses)
+            {
+                mAttackUses = mMaxAttackUses;
+            }
+            else
+            {
+                mAttackUses = setAttackUses;
+            }
+        }
+        else
+        {
+            mAttackUses = 0;
+        }
+    }
+
+    void ResetAttackUses()
+    {
+        mAttackUses = mMaxAttackUses;
+    }
+
 private:
     std::string mName{ "" };
     int mBasePower{ 0 };
     int mLevel{ 1 };
+    int mAttackUses{ 0 };
+    int mMaxAttackUses{ 0 };
 
     static const int mMaxLevel{ 10 };
 };
@@ -278,10 +335,10 @@ void GetCharacterInfo(const Character& character, const std::vector<Attack>& att
 void Test(Character& character, std::vector<Attack>& attackList);
 void PurchaseUpgradesMenu(Character& character, std::vector<Attack>& attackList);
 void PurchaseAttackUpgrades(Character& character, std::vector<Attack>& attackList);
-void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList);
+void Arena(Character& character, std::vector<Attack>& attackList, std::vector<Character>& enemyList);
 bool ForfeitMatch(Character& character);
 int ChooseAttack(const Character& character, const std::vector<Attack>& attackList);
-bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy);
+bool Battle(Character& character, std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy);
 
 int main()
 {
@@ -294,10 +351,10 @@ int main()
 
     std::vector<Character> enemyList{ goblin, orc, giant, werewolf };
 
-    Attack slash("Slash", 4, 1);
-    Attack scratch("Scratch", 1, 1);
-    Attack fireBlast("Fire Blast", 12, 1);
-    Attack stomp("Stomp", 7, 1);
+    Attack slash("Slash", 4, 1, 5, 20);
+    Attack scratch("Scratch", 1, 1, 25, 25);
+    Attack fireBlast("Fire Blast", 12, 1, 15, 15);
+    Attack stomp("Stomp", 7, 1, 25, 25);
 
     std::vector<Attack> attackList{ slash, scratch, fireBlast, stomp };
 
@@ -362,15 +419,17 @@ int main()
 
 void Test(Character& character, std::vector<Attack>& attackList)
 {
-    std::cout << "Health: " << character.GetHealth() << std::boolalpha <<" - Is Alive?: " << character.IsAlive() << '\n';
+    std::cout << attackList[0].GetName() << " -Attack Uses: " << attackList[0].GetAttackUses() << "/" << attackList[0].GetMaxAttackUses() << '\n';
 
-    character.SubtractHealth(2);
-    character.SubtractHealth(1);
+    for (int i = 0; i < 40; ++i)
+    {
+        attackList[0].SetAttackUses(100);
+    }
 
-    std::cout << "Health: " << character.GetHealth() << std::boolalpha << " - Is Alive?: " << character.IsAlive() << '\n';
+    std::cout << attackList[0].GetName() << " -Attack Uses: " << attackList[0].GetAttackUses() << "/" << attackList[0].GetMaxAttackUses() << '\n';
 }
 
-void Arena(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList)
+void Arena(Character& character, std::vector<Attack>& attackList, std::vector<Character>& enemyList)
 {
     int enemyIndex{ static_cast<int>(enemyList.size() - 1) };
 
@@ -435,8 +494,9 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
         for (int counter{ 1 }; const auto & attack : attackList)
         {
             std::cout << counter++ << "). " << attack.GetName() << '\n';
-            std::cout << std::format("{:>5}", "") << " -PWR: " << attack.GetDamage(character.GetLevel()) << '\n';
-            std::cout << std::format("{:>5}", "") << " -LVL: " << attack.GetLevel() << '\n';
+            std::cout << std::format("{:>5}", "") << " -Power: " << attack.GetDamage(character.GetLevel()) << '\n';
+            std::cout << std::format("{:>5}", "") << " -Level: " << attack.GetLevel() << '\n';
+            std::cout << std::format("{:>5}", "") << " -Moves: " << attack.GetAttackUses() << '/' << attack.GetMaxAttackUses() << '\n';
         }
 
         int choice{ 0 };
@@ -446,6 +506,19 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
         //Add error handling for incorrect choices and make it so when the user selects a right choice the while loop ends
         //I believe the return statement will forcibly return a value and end the while loop so a true false to end the loop
         //May not be needed.
+
+        //TODO
+        // 
+        //Need to figure out a way to make it so the player cannot select an attack that has no
+        //use points left, the commented out code below checks to see if all the attacks have no
+        //use points left, and if so, will end the challenge.
+
+        /*auto lambda = [](const Attack& attack) { return attack.GetAttackUses() == 0; };
+
+        if (std::all_of(attackList.begin(), attackList.end(), lambda))
+        {
+            std::cout << "You're all outof moves! best of luck next time!\n\n";
+        }*/
 
         if (choice <= attackList.size())
         {
@@ -473,7 +546,7 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
 * @return Returns a value that says if the player or enemy have died
 * @warning This function does not have user input handling!
 */
-bool Battle(Character& character, const std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy)
+bool Battle(Character& character, std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy)
 {
     std::uniform_int_distribution<int> missAttackChance{ 0, 5 };
 
@@ -493,7 +566,7 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
 
     if(character.IsAlive() == true && enemyList[randomlyChosenEnemy].IsAlive() == true)
     {
-        std::cout << character.GetName() << " used " << attackList[attackChoice - 1].GetName() << "!\n";
+        auto lambda = [](const Attack& attack) { return attack.GetAttackUses() == 0; };
 
         //Check if players attack missed
         if (missAttackChance(mt) == 5)
@@ -502,8 +575,11 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
         }
         else
         {
+             std::cout << character.GetName() << " used " << attackList[attackChoice - 1].GetName() << "!\n";
             std::cout << "It did " << attackList[attackChoice - 1].GetDamage(character.GetLevel()) << " damage!\n\n";
             enemyList[randomlyChosenEnemy].SubtractHealth(attackList[attackChoice - 1].GetDamage(character.GetLevel()));
+
+            attackList[attackChoice - 1].DecrementAttackUses();
 
             //Enemies turn
             std::cout << "The " << enemyList[randomlyChosenEnemy].GetName() << " used " << attackList[randomlyChosenAttack].GetName() << "!\n";
@@ -539,6 +615,11 @@ bool Battle(Character& character, const std::vector<Attack>& attackList, std::ve
             std::cout << "You gained " << experienceReward << " experience.\n\n";
 
             character.GiveExperience(experienceReward);
+
+            for (auto& attack : attackList)
+            {
+                attack.ResetAttackUses();
+            }
 
             return true;
         }
