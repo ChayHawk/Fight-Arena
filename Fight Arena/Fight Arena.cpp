@@ -351,12 +351,20 @@ int main()
 
     std::vector<Character> enemyList{ goblin, orc, giant, werewolf };
 
-    Attack slash("Slash", 4, 1, 5, 20);
+    Attack slash("Slash", 4, 1, 1, 20);
     Attack scratch("Scratch", 1, 1, 25, 25);
     Attack fireBlast("Fire Blast", 12, 1, 15, 15);
     Attack stomp("Stomp", 7, 1, 25, 25);
 
     std::vector<Attack> attackList{ slash, scratch, fireBlast, stomp };
+
+
+    //TEST
+    //attackList[0].SetAttackUses(0);
+    attackList[1].SetAttackUses(0);
+    attackList[2].SetAttackUses(0);
+    attackList[3].SetAttackUses(0);
+    //END TEST
 
     bool isTesting{ false };
 
@@ -489,44 +497,49 @@ int ChooseAttack(const Character& character, const std::vector<Attack>& attackLi
 
     while (hasChosenAttack != true)
     {
-        std::cout << "Choose  an attack to use:\n\n";
-
-        for (int counter{ 1 }; const auto & attack : attackList)
-        {
-            std::cout << counter++ << "). " << attack.GetName() << '\n';
-            std::cout << std::format("{:>5}", "") << " -Power: " << attack.GetDamage(character.GetLevel()) << '\n';
-            std::cout << std::format("{:>5}", "") << " -Level: " << attack.GetLevel() << '\n';
-            std::cout << std::format("{:>5}", "") << " -Moves: " << attack.GetAttackUses() << '/' << attack.GetMaxAttackUses() << '\n';
-        }
-
-        int choice{ 0 };
-
-        std::cin >> choice;
-
-        //Add error handling for incorrect choices and make it so when the user selects a right choice the while loop ends
-        //I believe the return statement will forcibly return a value and end the while loop so a true false to end the loop
-        //May not be needed.
+        auto lambda = [](const Attack& attack) { return attack.GetAttackUses() == 0; };
 
         //TODO
-        // 
-        //Need to figure out a way to make it so the player cannot select an attack that has no
-        //use points left, the commented out code below checks to see if all the attacks have no
-        //use points left, and if so, will end the challenge.
-
-        /*auto lambda = [](const Attack& attack) { return attack.GetAttackUses() == 0; };
-
+        //This condition causes an infinite loop, It should be fixed later.
         if (std::all_of(attackList.begin(), attackList.end(), lambda))
         {
-            std::cout << "You're all outof moves! best of luck next time!\n\n";
-        }*/
-
-        if (choice <= attackList.size())
-        {
-            return choice;
+            std::cout << "You're all out of moves!\n\n";
         }
         else
         {
-            hasChosenAttack = false;
+            std::cout << "Choose  an attack to use:\n\n";
+
+            for (int counter{ 1 }; const auto & attack : attackList)
+            {
+                std::cout << counter++ << "). " << attack.GetName() << '\n';
+                std::cout << std::format("{:>5}", "") << " -Power: " << attack.GetDamage(character.GetLevel()) << '\n';
+                std::cout << std::format("{:>5}", "") << " -Level: " << attack.GetLevel() << '\n';
+                std::cout << std::format("{:>5}", "") << " -Moves: " << attack.GetAttackUses() << '/' << attack.GetMaxAttackUses() << '\n';
+            }
+
+            int choice{ 0 };
+
+            std::cin >> choice;
+
+            //Add error handling for incorrect choices and make it so when the user selects a right choice the while loop ends
+            //I believe the return statement will forcibly return a value and end the while loop so a true false to end the loop
+            //May not be needed.
+
+            if (choice <= attackList.size())
+            {
+                if (attackList[choice - 1].GetAttackUses() == 0)
+                {
+                    std::cout << "That attack has no moves left! Choose something else!\n";
+                }
+                else
+                {
+                    return choice;
+                }
+            }
+            else
+            {
+                hasChosenAttack = false;
+            }
         }
     }
 }
@@ -575,7 +588,7 @@ bool Battle(Character& character, std::vector<Attack>& attackList, std::vector<C
         }
         else
         {
-             std::cout << character.GetName() << " used " << attackList[attackChoice - 1].GetName() << "!\n";
+            std::cout << character.GetName() << " used " << attackList[attackChoice - 1].GetName() << "!\n";
             std::cout << "It did " << attackList[attackChoice - 1].GetDamage(character.GetLevel()) << " damage!\n\n";
             enemyList[randomlyChosenEnemy].SubtractHealth(attackList[attackChoice - 1].GetDamage(character.GetLevel()));
 
