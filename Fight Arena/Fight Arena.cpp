@@ -8,6 +8,7 @@
 #include <limits>
 #include <algorithm>
 #include <fstream>
+#include <memory>
 
 std::mt19937 mt{ static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) };
 const int outOfMovesFlag{ 500 };
@@ -410,23 +411,6 @@ int main()
     player.LearnAttack(rifle);
     player.LearnAttack(handgun);
 
-
-    //TEST
-    player.AddMoney(5000);
-    player.SubtractHealth(37);
-    player.GiveExperience(17987);
-
-    for (const auto& enemy : enemyList)
-    {
-        std::cout << enemy->GetName() << " has learned the following attacks:\n";
-        for (const auto& attack : enemy->GetAttacks())
-        {
-            std::cout << "- " << attack.GetName() << '\n';
-        }
-        std::cout << '\n';
-    }
-    //END TEST
-
     bool isTesting{ false };
 
     if (isTesting == true)
@@ -483,7 +467,6 @@ int main()
                     {
                         Arena(player, enemyList);
                     }
-
                 }
                     break;
 
@@ -648,10 +631,6 @@ int ChooseAttack(Character& player)
 */
 bool Battle(Character& player, std::vector<Character*>& enemyList, int randomlyChosenEnemy)
 {
-    //Write an if statement to make sure this is valid
-    //Due to the new way characters use attacks, this will need to be solved as to how an attack is  used.
-    std::cout << "STOP ONE\n\n";
-
     if (enemyList[randomlyChosenEnemy]->GetAttacks().empty())
     {
         std::cerr << "Enemy has no attacks.\n\n";
@@ -668,10 +647,7 @@ bool Battle(Character& player, std::vector<Character*>& enemyList, int randomlyC
 
     int playerAttackChoice{ 0 };
 
-    //CRASH
-    std::cout << "STOP TWO\n\n";
     playerAttackChoice = ChooseAttack(player);
-    std::cout << "STOP THREE\n\n";
 
     if (playerAttackChoice == ::outOfMovesFlag)
     {
@@ -710,8 +686,8 @@ bool Battle(Character& player, std::vector<Character*>& enemyList, int randomlyC
                 }
                 else
                 {
-                    std::cout << "It did " << player.GetAttacks()[randomlyChosenAttack].GetDamage(player.GetLevel()) << " damage\n\n";
-                    player.SubtractHealth(player.GetAttacks()[randomlyChosenAttack].GetDamage(player.GetLevel()));
+                    std::cout << "It did " << enemyList[randomlyChosenEnemy]->GetAttacks()[randomlyChosenAttack].GetDamage(player.GetLevel()) << " damage\n\n";
+                    player.SubtractHealth(enemyList[randomlyChosenEnemy]->GetAttacks()[randomlyChosenAttack].GetDamage(player.GetLevel()));
                 }
             }
         }
@@ -865,7 +841,6 @@ void PurchaseUpgradesMenu(Character& player)
  */
 void PurchaseAttackUpgrades(Character& player)
 {
-    player.AddMoney(5000);
     std::cout << "\nWhich attack would you like to upgrade?\n\n";
     std::cout << "Cash $" << player.GetMoney() << "\n\n";
 
@@ -994,6 +969,8 @@ void Load(Character& player)
     player = Character(name, health, level, money);
     player.GiveExperience(experience);
 
+    //TODO - TEST
+    //This needs to be tested
     for (int attackLevel{0}; auto& attack : player.GetAttacks())
     {
         load >> attackLevel;
