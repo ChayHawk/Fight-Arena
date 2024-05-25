@@ -57,6 +57,19 @@ public:
         }
     }
 
+    void SetLevel(int setLevelTo)
+    {
+        if (setLevelTo > 0)
+        {
+            mLevel = setLevelTo;
+
+            if (mLevel > mMaxLevel)
+            {
+                mLevel = mMaxLevel;
+            }
+        }
+    }
+
     bool IsMaxLevel() const
     {
         if (mLevel == mMaxLevel)
@@ -174,6 +187,18 @@ class Character
         int GetExperience() const
         {
             return mExperience;
+        }
+
+        //TODO
+        //Add error handling for multiple attacks of the same name
+        void LearnAttack(const Attack& attackToLearn)
+        {
+            mAttacks.push_back(attackToLearn);
+        }
+
+        std::vector<Attack> GetAttacks() const
+        {
+            return mAttacks;
         }
 
         //Done
@@ -325,6 +350,7 @@ class Character
         int mLevel{ 1 };
         int mMoney{ 0 };
         int mExperience{ 0 };
+        std::vector<Attack> mAttacks{};
 
         static const int mMaxLevel{ 100 };
         static const int mMaxHealth{ 100 };
@@ -365,6 +391,8 @@ int main()
 
     //TEST
     player.AddMoney(5000);
+    player.SubtractHealth(37);
+    player.GiveExperience(17987);
     //END TEST
 
     bool isTesting{ false };
@@ -733,7 +761,9 @@ void GetCharacterInfo(const Character& player, const std::vector<Attack>& attack
     {
         std::cout << std::format("{:>4}", "") << attack.GetName() << '\n';
         std::cout << std::format("{:>8}", "") << "-Base Power: " << attack.GetBasePower() << '\n';
-        std::cout << std::format("{:>8}", "") << "-Attack Power: " << attack.GetDamage(player.GetLevel()) << "\n\n";
+        std::cout << std::format("{:>8}", "") << "-Attack Power: " << attack.GetDamage(player.GetLevel()) << "\n";
+        std::cout << std::format("{:>8}", "") << "-Level: " << attack.GetLevel() << "\n";
+        std::cout << std::format("{:>8}", "") << "-Max Moves: " << attack.GetMaxAttackUses() << "\n\n";
     }
 }
 
@@ -861,16 +891,33 @@ void Save(const Character& player, const std::vector<Attack>& attackList)
 {
     std::ofstream save("savegame.txt");
 
+    if (!save)
+    {
+        std::cerr << "Unable to open save file!\n";
+        return;
+    }
+
     save << player.GetName() << '\n';
     save << player.GetHealth() << '\n';
     save << player.GetLevel() << '\n';
     save << player.GetMoney() << '\n';
     save << player.GetExperience() << '\n';
+
+    for (const auto& attack : player.GetAttacks())
+    {
+        save << attack.GetLevel() << '\n';
+    }
 }
 
 void Load(Character& player, std::vector<Attack>& attackList)
 {
     std::ifstream load("savegame.txt");
+
+    if (!load)
+    {
+        std::cerr << "Unable to open load file!\n";
+        return;
+    }
 
     std::string name{ };
     int money{ };
@@ -885,4 +932,13 @@ void Load(Character& player, std::vector<Attack>& attackList)
     load >> experience;
 
     player = Character(name, health, level, money);
+    player.GiveExperience(experience);
+
+    for (int attackLevel{0}; auto& attack : player.GetAttacks())
+    {
+        load >> attackLevel;
+        attack.SetLevel(attackLevel);
+        attackLevel = 0;
+    }
+
 }
