@@ -10,7 +10,7 @@
 #include <fstream>
 
 std::mt19937 mt{ static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()) };
-const int outOfMoves{ 500 };
+const int outOfMovesFlag{ 500 };
 
 class Attack
 {
@@ -196,7 +196,12 @@ class Character
             mAttacks.push_back(attackToLearn);
         }
 
-        std::vector<Attack> GetAttacks() const
+        std::vector<Attack>& GetAttacks() // Return by reference
+        {
+            return mAttacks;
+        }
+
+        const std::vector<Attack>& GetAttacks() const // Const version for const objects
         {
             return mAttacks;
         }
@@ -359,16 +364,16 @@ class Character
         static const int mMaxMoney{ 99999999 };
 };
 
-void GetCharacterInfo(const Character& player, const std::vector<Attack>& attackList);
-void Test(Character& player, std::vector<Attack>& attackList);
-void PurchaseUpgradesMenu(Character& player, std::vector<Attack>& attackList);
-void PurchaseAttackUpgrades(Character& player, std::vector<Attack>& attackList);
-void Arena(Character& player, std::vector<Attack>& attackList, std::vector<Character>& enemyList);
+void GetCharacterInfo(const Character& player);
+void Test(Character& player);
+void PurchaseUpgradesMenu(Character& player);
+void PurchaseAttackUpgrades(Character& player);
+void Arena(Character& player, std::vector<Character*>& enemyList);
 bool ForfeitMatch(Character& player);
-int ChooseAttack(const Character& player, std::vector<Attack>& attackList);
-bool Battle(Character& player, std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy);
-void Save(const Character& player, const std::vector<Attack>& attackList);
-void Load(Character& player, std::vector<Attack>& attackList);
+int ChooseAttack(Character& player);
+bool Battle(Character& player, std::vector<Character*>& enemyList, int randomlyChosenEnemy);
+void Save(const Character& player);
+void Load(Character& player);
 
 int main()
 {
@@ -376,30 +381,57 @@ int main()
 
     Character goblin("Goblin", 30, 1, 0);
     Character orc("Orc", 42, 1, 0);
-    Character giant("Giant", 103, 1, 0);
-    Character werewolf("Werewolf", 92, 1, 0);
+    Character dragon("Dragon", 500, 1, 0);
 
-    std::vector<Character> enemyList{ goblin, orc, giant, werewolf };
+    std::vector<Character*> enemyList{ &goblin, &orc, &dragon };
 
     Attack slash("Slash", 4, 1, 1, 20);
     Attack scratch("Scratch", 1, 1, 25, 25);
     Attack fireBlast("Fire Blast", 12, 1, 15, 15);
     Attack stomp("Stomp", 7, 1, 25, 25);
+    Attack orcSword("Orc Sword", 9, 1, 13, 13);
+    Attack punch("Punch", 3, 1, 20, 20);
+    Attack kick("Kick", 5, 1, 15,  15);
+    Attack rifle("Assault Rifle", 15, 1, 30, 30);
+    Attack handgun("Handgun", 10, 1, 8, 36);
 
-    std::vector<Attack> attackList{ slash, scratch, fireBlast, stomp };
+    goblin.LearnAttack(stomp);
+    goblin.LearnAttack(scratch);
+    goblin.LearnAttack(punch);
+    
+    orc.LearnAttack(orcSword);
+    orc.LearnAttack(punch);
+    orc.LearnAttack(kick);
+
+    dragon.LearnAttack(slash);
+    dragon.LearnAttack(fireBlast);
+    dragon.LearnAttack(stomp);
+
+    player.LearnAttack(rifle);
+    player.LearnAttack(handgun);
 
 
     //TEST
     player.AddMoney(5000);
     player.SubtractHealth(37);
     player.GiveExperience(17987);
+
+    for (const auto& enemy : enemyList)
+    {
+        std::cout << enemy->GetName() << " has learned the following attacks:\n";
+        for (const auto& attack : enemy->GetAttacks())
+        {
+            std::cout << "- " << attack.GetName() << '\n';
+        }
+        std::cout << '\n';
+    }
     //END TEST
 
     bool isTesting{ false };
 
     if (isTesting == true)
     {
-        Test(player, attackList);
+        Test(player);
     }
     else
     {
@@ -433,24 +465,35 @@ int main()
                 switch (choice)
                 {
                 case 1:
-                    PurchaseUpgradesMenu(player, attackList);
+                    PurchaseUpgradesMenu(player);
                     break;
 
                 case 2:
-                    GetCharacterInfo(player, attackList);
+                    GetCharacterInfo(player);
                     break;
 
                 case 3:
-                    Arena(player, attackList, enemyList);
+                {
+                    if (player.GetAttacks().size() == 0)
+                    {
+                        std::cerr << "You dont have any attacks\n\n";
+                        break;
+                    }
+                    else
+                    {
+                        Arena(player, enemyList);
+                    }
+
+                }
                     break;
 
                 case 4:
-                    Save(player, attackList);
+                    Save(player);
                     std::cout << "Game Saved\n\n";
                     break;
 
                 case 5:
-                    Load(player, attackList);
+                    Load(player);
                     std::cout << "Game Loaded\n\n";
                     break;
 
@@ -466,19 +509,19 @@ int main()
     }
 }
 
-void Test(Character& player, std::vector<Attack>& attackList)
+void Test(Character& player)
 {
-    std::cout << attackList[0].GetName() << " -Attack Uses: " << attackList[0].GetAttackUses() << "/" << attackList[0].GetMaxAttackUses() << '\n';
+    std::cout << player.GetAttacks()[0].GetName() << " -Attack Uses: " << player.GetAttacks()[0].GetAttackUses() << "/" << player.GetAttacks()[0].GetMaxAttackUses() << '\n';
 
     for (int i = 0; i < 40; ++i)
     {
-        attackList[0].SetAttackUses(100);
+        player.GetAttacks()[0].SetAttackUses(100);
     }
 
-    std::cout << attackList[0].GetName() << " -Attack Uses: " << attackList[0].GetAttackUses() << "/" << attackList[0].GetMaxAttackUses() << '\n';
+    std::cout << player.GetAttacks()[0].GetName() << " -Attack Uses: " << player.GetAttacks()[0].GetAttackUses() << "/" << player.GetAttacks()[0].GetMaxAttackUses() << '\n';
 }
 
-void Arena(Character& player, std::vector<Attack>& attackList, std::vector<Character>& enemyList)
+void Arena(Character& player, std::vector<Character*>& enemyList)
 {
     int enemyIndex{ static_cast<int>(enemyList.size() - 1) };
 
@@ -486,7 +529,7 @@ void Arena(Character& player, std::vector<Attack>& attackList, std::vector<Chara
     int randomlyChosenEnemy{ randomizeEnemy(mt) };
 
     std::cout << "Welcome to the arena! this is your opponent:\n";
-    std::cout << "A level " << enemyList[randomlyChosenEnemy].GetLevel()  << " " << enemyList[randomlyChosenEnemy].GetName() << " with " << enemyList[randomlyChosenEnemy].GetHealth() << " HP!\n\n";
+    std::cout << "A level " << enemyList[randomlyChosenEnemy]->GetLevel()  << " " << enemyList[randomlyChosenEnemy]->GetName() << " with " << enemyList[randomlyChosenEnemy]->GetHealth() << " HP!\n\n";
 
     int choice{ 0 };
     bool endMatch{ false };
@@ -506,7 +549,7 @@ void Arena(Character& player, std::vector<Attack>& attackList, std::vector<Chara
         {
             case 1:
             {
-                endMatch = Battle(player, attackList, enemyList, randomlyChosenEnemy);
+                endMatch = Battle(player, enemyList, randomlyChosenEnemy);
             }
             break;
 
@@ -532,7 +575,7 @@ void Arena(Character& player, std::vector<Attack>& attackList, std::vector<Chara
 * @return Returns the players attack choice
 * @warning This function does not have user input handling!
 */
-int ChooseAttack(const Character& player, std::vector<Attack>& attackList)
+int ChooseAttack(Character& player)
 {
     bool hasChosenAttack{ false };
 
@@ -540,22 +583,22 @@ int ChooseAttack(const Character& player, std::vector<Attack>& attackList)
     {
         auto lambda = [](const Attack& attack) { return attack.GetAttackUses() == 0; };
 
-        if (std::all_of(attackList.begin(), attackList.end(), lambda))
+        if (std::all_of(player.GetAttacks().begin(), player.GetAttacks().end(), lambda))
         {
             std::cout << "You're all out of moves, this match is over!\n\n";
             
-            for (auto& attack : attackList)
+            for (auto& attack : player.GetAttacks())
             {
                 attack.ResetAttackUses();
             }
 
-            return outOfMoves;
+            return ::outOfMovesFlag;
         }
         else
         {
             std::cout << "Choose  an attack to use:\n\n";
 
-            for (int counter{ 1 }; const auto & attack : attackList)
+            for (int counter{ 1 }; const auto & attack : player.GetAttacks())
             {
                 std::cout << counter++ << "). " << attack.GetName() << '\n';
                 std::cout << std::format("{:>5}", "") << " -Power: " << attack.GetDamage(player.GetLevel()) << '\n';
@@ -567,13 +610,9 @@ int ChooseAttack(const Character& player, std::vector<Attack>& attackList)
 
             std::cin >> choice;
 
-            //Add error handling for incorrect choices and make it so when the user selects a right choice the while loop ends
-            //I believe the return statement will forcibly return a value and end the while loop so a true false to end the loop
-            //May not be needed.
-
-            if (choice <= attackList.size())
+            if (choice > 0 && choice <= static_cast<int>(player.GetAttacks().size()))
             {
-                if (attackList[choice - 1].GetAttackUses() == 0)
+                if (player.GetAttacks()[choice - 1].GetAttackUses() == 0)
                 {
                     std::cout << "That attack has no moves left! Choose something else!\n";
                 }
@@ -588,6 +627,8 @@ int ChooseAttack(const Character& player, std::vector<Attack>& attackList)
             }
         }
     }
+
+    return ::outOfMovesFlag;
 }
 
 
@@ -605,10 +646,19 @@ int ChooseAttack(const Character& player, std::vector<Attack>& attackList)
 * @return Returns a value that says if the player or enemy have died
 * @warning This function does not have user input handling!
 */
-bool Battle(Character& player, std::vector<Attack>& attackList, std::vector<Character>& enemyList, int randomlyChosenEnemy)
+bool Battle(Character& player, std::vector<Character*>& enemyList, int randomlyChosenEnemy)
 {
     //Write an if statement to make sure this is valid
-    std::uniform_int_distribution<int> randomizedAttack{ 0, static_cast<int>(attackList.size() - 1) };
+    //Due to the new way characters use attacks, this will need to be solved as to how an attack is  used.
+    std::cout << "STOP ONE\n\n";
+
+    if (enemyList[randomlyChosenEnemy]->GetAttacks().empty())
+    {
+        std::cerr << "Enemy has no attacks.\n\n";
+        return true;
+    }
+    std::uniform_int_distribution<int> randomizedAttack{ 0, static_cast<int>(enemyList[randomlyChosenEnemy]->GetAttacks().size() - 1)};
+
     int randomlyChosenAttack{ randomizedAttack(mt) };
 
     std::uniform_int_distribution<int> randomPrizeMoney{ 10, 50 };
@@ -616,19 +666,23 @@ bool Battle(Character& player, std::vector<Attack>& attackList, std::vector<Char
 
     int experienceReward{ randomExperience(mt) };
 
-    int attackChoice{ 0 };
-    attackChoice = ChooseAttack(player, attackList);
+    int playerAttackChoice{ 0 };
 
-    if (attackChoice == ::outOfMoves)
+    //CRASH
+    std::cout << "STOP TWO\n\n";
+    playerAttackChoice = ChooseAttack(player);
+    std::cout << "STOP THREE\n\n";
+
+    if (playerAttackChoice == ::outOfMovesFlag)
     {
         return true;
     }
     else
     {
         std::cout << player.GetName() << "s HP: " << player.GetHealth() << '\n';
-        std::cout << enemyList[randomlyChosenEnemy].GetName() << "s HP: " << enemyList[randomlyChosenEnemy].GetHealth() << "\n\n";
+        std::cout << enemyList[randomlyChosenEnemy]->GetName() << "s HP: " << enemyList[randomlyChosenEnemy]->GetHealth() << "\n\n";
 
-        if (player.IsAlive() == true && enemyList[randomlyChosenEnemy].IsAlive() == true)
+        if (player.IsAlive() == true && enemyList[randomlyChosenEnemy]->IsAlive() == true)
         {
             auto lambda = [](const Attack& attack) { return attack.GetAttackUses() == 0; };
 
@@ -641,39 +695,39 @@ bool Battle(Character& player, std::vector<Attack>& attackList, std::vector<Char
             }
             else
             {
-                std::cout << player.GetName() << " used " << attackList[attackChoice - 1].GetName() << "!\n";
-                std::cout << "It did " << attackList[attackChoice - 1].GetDamage(player.GetLevel()) << " damage!\n\n";
-                enemyList[randomlyChosenEnemy].SubtractHealth(attackList[attackChoice - 1].GetDamage(player.GetLevel()));
+                std::cout << player.GetName() << " used " << player.GetAttacks()[playerAttackChoice - 1].GetName() << "!\n";
+                std::cout << "It did " << player.GetAttacks()[playerAttackChoice - 1].GetDamage(player.GetLevel()) << " damage!\n\n";
+                enemyList[randomlyChosenEnemy]->SubtractHealth(player.GetAttacks()[playerAttackChoice - 1].GetDamage(player.GetLevel()));
 
-                attackList[attackChoice - 1].DecrementAttackUses();
+                player.GetAttacks()[playerAttackChoice - 1].DecrementAttackUses();
 
                 //Enemies turn
-                std::cout << "The " << enemyList[randomlyChosenEnemy].GetName() << " used " << attackList[randomlyChosenAttack].GetName() << "!\n";
+                std::cout << "The " << enemyList[randomlyChosenEnemy]->GetName() << " used " << enemyList[randomlyChosenEnemy]->GetAttacks()[randomlyChosenAttack].GetName() << "!\n";
 
                 if (missAttackChance(mt) == 5)
                 {
-                    std::cout << enemyList[randomlyChosenEnemy].GetName() << "s attack missed!\n\n";
+                    std::cout << enemyList[randomlyChosenEnemy]->GetName() << "s attack missed!\n\n";
                 }
                 else
                 {
-                    std::cout << "It did " << attackList[randomlyChosenAttack].GetDamage(player.GetLevel()) << " damage\n\n";
-                    player.SubtractHealth(attackList[randomlyChosenAttack].GetDamage(player.GetLevel()));
+                    std::cout << "It did " << player.GetAttacks()[randomlyChosenAttack].GetDamage(player.GetLevel()) << " damage\n\n";
+                    player.SubtractHealth(player.GetAttacks()[randomlyChosenAttack].GetDamage(player.GetLevel()));
                 }
             }
         }
         else
         {
-            if (player.IsAlive() == false && enemyList[randomlyChosenEnemy].IsAlive() == true)
+            if (player.IsAlive() == false && enemyList[randomlyChosenEnemy]->IsAlive() == true)
             {
                 std::cout << "You died!\n\n";
 
                 return true;
             }
-            else if (enemyList[randomlyChosenEnemy].IsAlive() == false && player.IsAlive() == true)
+            else if (enemyList[randomlyChosenEnemy]->IsAlive() == false && player.IsAlive() == true)
             {
                 int prizeMoney{ randomPrizeMoney(mt) };
 
-                std::cout << "You defeated the " << enemyList[randomlyChosenEnemy].GetName() << "!\n";
+                std::cout << "You defeated the " << enemyList[randomlyChosenEnemy]->GetName() << "!\n";
                 std::cout << "You won $" << prizeMoney << " as prize money.\n";
 
                 player.AddMoney(prizeMoney);
@@ -682,14 +736,14 @@ bool Battle(Character& player, std::vector<Attack>& attackList, std::vector<Char
 
                 player.GiveExperience(experienceReward);
 
-                for (auto& attack : attackList)
+                for (auto& attack : player.GetAttacks())
                 {
                     attack.ResetAttackUses();
                 }
 
                 return true;
             }
-            else if (player.IsAlive() == false && enemyList[randomlyChosenEnemy].IsAlive() == false)
+            else if (player.IsAlive() == false && enemyList[randomlyChosenEnemy]->IsAlive() == false)
             {
                 std::cout << "You both killed each other at the same time, it's a draw! what a show!\n\n";
 
@@ -749,7 +803,7 @@ bool ForfeitMatch(Character& player)
  * @param character The player's character performing the attack.
  * @param attackList A list of possible attacks the player's character can use.
  */
-void GetCharacterInfo(const Character& player, const std::vector<Attack>& attackList)
+void GetCharacterInfo(const Character& player)
 {
     std::cout << player.GetName() << '\n';
     std::cout << std::format("{:>4}", "") << "-HP: " << player.GetHealth() << '\n';
@@ -757,7 +811,7 @@ void GetCharacterInfo(const Character& player, const std::vector<Attack>& attack
     std::cout << std::format("{:>4}", "") << "-$" << player.GetMoney() << '\n';
 
     std::cout << "\nAttacks\n";
-    for (const auto& attack : attackList)
+    for (const auto& attack : player.GetAttacks())
     {
         std::cout << std::format("{:>4}", "") << attack.GetName() << '\n';
         std::cout << std::format("{:>8}", "") << "-Base Power: " << attack.GetBasePower() << '\n';
@@ -775,7 +829,7 @@ void GetCharacterInfo(const Character& player, const std::vector<Attack>& attack
  * @param character The player's character performing the attack.
  * @param attackList A list of possible attacks the player's character can use.
  */
-void PurchaseUpgradesMenu(Character& player, std::vector<Attack>& attackList)
+void PurchaseUpgradesMenu(Character& player)
 {
     std::cout << "What would you like to purchase upgrades for?\n\n";
 
@@ -789,7 +843,7 @@ void PurchaseUpgradesMenu(Character& player, std::vector<Attack>& attackList)
     switch (choice)
     {
         case 1:
-            PurchaseAttackUpgrades(player, attackList);
+            PurchaseAttackUpgrades(player);
             break;
 
         case 2:
@@ -809,7 +863,7 @@ void PurchaseUpgradesMenu(Character& player, std::vector<Attack>& attackList)
  * @param character The player's character performing the attack.
  * @param attackList A list of possible attacks the player's character can use.
  */
-void PurchaseAttackUpgrades(Character& player, std::vector<Attack>& attackList)
+void PurchaseAttackUpgrades(Character& player)
 {
     player.AddMoney(5000);
     std::cout << "\nWhich attack would you like to upgrade?\n\n";
@@ -817,9 +871,15 @@ void PurchaseAttackUpgrades(Character& player, std::vector<Attack>& attackList)
 
     int attackListIndex{ 0 };
 
-    for (int counter{ 1 }; const auto & attack : attackList)
+    if (player.GetAttacks().size() == 0)
     {
-        std::cout << counter++ << ") " << attack.GetName() << " -Level: " << attack.GetLevel() << " -Upgrade Cost $" << 500 * attackList[attackListIndex++].GetLevel() << '\n';
+        std::cout << "You have no attacks to upgrade!\n\n";
+        return;
+    }
+
+    for (int counter{ 1 }; const auto & attack : player.GetAttacks())
+    {
+        std::cout << counter++ << ") " << attack.GetName() << " -Level: " << attack.GetLevel() << " -Upgrade Cost $" << 500 * player.GetAttacks()[attackListIndex++].GetLevel() << '\n';
     }
 
     std::cout << '\n';
@@ -831,14 +891,14 @@ void PurchaseAttackUpgrades(Character& player, std::vector<Attack>& attackList)
     int upgradeStep{ 0 };
     auto attackToUpgrade{ 0 };
 
-    if (choice <= attackList.size())
+    if (choice <= player.GetAttacks().size())
     {
-        upgradeStep = 500 * attackList[choice - 1].GetLevel();
-        attackToUpgrade = attackList[choice - 1].GetLevel();
+        upgradeStep = 500 * player.GetAttacks()[choice - 1].GetLevel();
+        attackToUpgrade = player.GetAttacks()[choice - 1].GetLevel();
 
         if (player.GetMoney() >= upgradeStep)
         {
-            std::cout << attackList[choice - 1].GetName() << " will cost " << upgradeStep << " to upgrade to level " << attackList[choice - 1].GetLevel() + 1 << ".\n";
+            std::cout << player.GetAttacks()[choice - 1].GetName() << " will cost " << upgradeStep << " to upgrade to level " << player.GetAttacks()[choice - 1].GetLevel() + 1 << ".\n";
             std::cout << "You currently have $" << player.GetMoney() << " continue with upgrade?\n";
 
             int choice{ 0 };
@@ -850,11 +910,11 @@ void PurchaseAttackUpgrades(Character& player, std::vector<Attack>& attackList)
 
             if (choice == 1)
             {
-                attackList[choice - 1].IncreaseLevel();
+                player.GetAttacks()[choice - 1].IncreaseLevel();
                 player.SubtractMoney(upgradeStep);
 
-                std::cout << "You currently have $" << player.GetMoney() << " and your " << attackList[choice - 1].GetName()
-                    << " attack is at level " << attackList[choice - 1].GetLevel() << "!\n";
+                std::cout << "You currently have $" << player.GetMoney() << " and your " << player.GetAttacks()[choice - 1].GetName()
+                    << " attack is at level " << player.GetAttacks()[choice - 1].GetLevel() << "!\n";
             }
             else if (choice == 2)
             {
@@ -887,7 +947,7 @@ void PurchaseAttackUpgrades(Character& player, std::vector<Attack>& attackList)
  * 
  * @todo Implement saving of player attack levels
  */
-void Save(const Character& player, const std::vector<Attack>& attackList)
+void Save(const Character& player)
 {
     std::ofstream save("savegame.txt");
 
@@ -909,7 +969,7 @@ void Save(const Character& player, const std::vector<Attack>& attackList)
     }
 }
 
-void Load(Character& player, std::vector<Attack>& attackList)
+void Load(Character& player)
 {
     std::ifstream load("savegame.txt");
 
