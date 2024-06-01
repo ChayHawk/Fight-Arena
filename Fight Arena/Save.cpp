@@ -29,6 +29,8 @@ void Save(const Character& player)
     save << player.GetMoney() << '\n';
     save << player.GetExperience() << '\n';
 
+    //TODO - TEST
+    //This particular section needs to be tested
     for (const auto& attack : player.GetAttacks())
     {
         save << attack.GetLevel() << '\n';

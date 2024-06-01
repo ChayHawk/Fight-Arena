@@ -30,7 +30,7 @@ void Load(Character& player)
     player.GiveExperience(experience);
 
     //TODO - TEST
-    //This needs to be tested
+    //This particular section needs to be tested
     for (int attackLevel{ 0 }; auto & attack : player.GetAttacks())
     {
         load >> attackLevel;
